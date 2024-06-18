@@ -29,6 +29,7 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
     - [1.1 External  links and hidden routes](#11-external--links-and-hidden-routes)
     - [1.2 Adding items to the navbar](#12-adding-items-to-the-navbar)
   - [2. Adding authentication](#2-adding-authentication)
+    - [2.1 Adding Github provider](#21-adding-github-provider)
 
 
 # Why?
@@ -445,4 +446,148 @@ that we will define ourselves.
 
 Let's rock! 🎸
 
+We are going to be using 
+[`Auth.js`](https://authjs.dev/) to streamline our authentication process.
+This framework was previously working solely on `Next.js` projects,
+but this new `v5` release extends their compatibility to other frameworks.
+
+Let's add it to our project!
+
+> [!NOTE]
+>
+> At the time of writing, 
+> only the `beta` version of `auth.js` is working.
+> We'll update this doc when a full stable release is announced.
+
+```sh
+pnpm add next-auth@beta
+```
+
+Great!
+Now let's create our secret. 
+We are going to be using this secret as an [environment variable](https://github.com/dwyl/learn-environment-variables),
+which is used by the library to encrypt token and e-mail verification hashes.
+Simply run:
+
+```sh
+npx auth secret
+```
+
+Your terminal will show this:
+
+```
+Need to install the following packages:
+auth@1.0.2
+Ok to proceed? (y) y
+
+Secret generated. Copy it to your .env/.env.local file (depending on your framework):
+
+AUTH_SECRET=<your_secret>
+```
+
+Copy the secret and create a file called `.env.local`.
+
+```sh
+AUTH_SECRET=secret
+```
+
+Great!
+Now let's create the configuration files needed for `Auth.js` to work!
+Start by creating a file called `auth.ts` at the root.
+
+```ts
+import NextAuth from "next-auth";
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers: [],
+});
+```
+
+Then, create the following folders from the root of the project - 
+`/app/api/auth/[...nextauth]/`.
+`Nextra` only works in the [Pages Router](https://nextjs.org/docs/pages).
+Authentication with `Auth.js` needs the 
+[App Router](https://nextjs.org/docs/app) to work.
+For this, we need to create the folder hierarchy we've just mentioned.
+
+After creating the folders,
+create a file called `route.ts` inside `[...nextauth].
+
+```ts
+import { handlers } from "@/auth" // Referring to the auth.ts we just created
+export const { GET, POST } = handlers
+```
+
+And add a file called `middleware.ts` at the root of the project.
+This is to keep the session alive, 
+this will update the session expiry every time its called.
+
+```ts
+export { auth as middleware } from "@/auth"
+```
+
+> [!NOTE]
+>
+> Your imports may be complaining about not being able to find the `@auth` module.
+> To fix this, create a `tsconfig.json` file at the root of the project
+> with the following code.
+> 
+> ```json
+> {
+>  "compilerOptions": {
+>    "target": "es5",
+>    "lib": ["dom", "dom.iterable", "esnext"],
+>    "allowJs": true,
+>    "skipLibCheck": true,
+>    "strict": true,
+>    "noEmit": true,
+>    "esModuleInterop": true,
+>    "module": "esnext",
+>    "moduleResolution": "bundler",
+>    "resolveJsonModule": true,
+>    "isolatedModules": true,
+>    "jsx": "preserve",
+>    "incremental": true,
+>    "plugins": [
+>      {
+>        "name": "next"
+>      }
+>    ],
+>    "paths": {
+>      "@/*": ["./*"]
+>    }
+>  },
+>  "include": [
+>    "next-env.d.ts",
+>    "**/*.ts",
+>    "**/*.tsx",
+>    ".next/types/**/*.ts",
+>    "app/lib/placeholder-data.js",
+>    "scripts/seed.js"
+>  ],
+>  "exclude": ["node_modules"]
+> }
+
+And that's it!
+We're all ready to go!
+
+
+### 2.1 Adding Github provider
+
+You can now decide how you are going to authenticate the users into your application.
+You can either:
+- choose an [`OAuth`](https://oauth.net/2/), 
+a delegated authentication where you delegate through a third party.
+- or you can set up your own [identity provider](https://www.cloudflare.com/en-gb/learning/access-management/what-is-an-identity-provider/)
+and take care of it yourself.
+
+We're going to choose the former, because it's easier.
+[`Auth.js` docs](https://authjs.dev/getting-started/authentication) explain it succinctly.
+
+> OAuth services spend significant amounts of money, time, and engineering effort to build abuse detection (bot-protection, rate-limiting), 
+> password management (password reset, credential stuffing, rotation),
+> data security (encryption/salting, strength validation), and much more. 
+> It is likely that your application would benefit from leveraging these battle-tested solutions rather than try to rebuild them from scratch.
+
+Let's authenticate our users through a GitHub provider!
 

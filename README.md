@@ -420,7 +420,7 @@ The top-level pages are in the navbar,
 and you can check the sidebar inside the `api_reference` folder contents.
 
 <p align="center">
-  <img width='800' src="ttps://github.com/dwyl/learn-nextjs/assets/17494745/ce73b6d9-6890-4ee4-9635-354f88cbe887"/>
+  <img width='800' src="https://github.com/dwyl/learn-nextjs/assets/17494745/ce73b6d9-6890-4ee4-9635-354f88cbe887"/>
 </p>
 
 Awesome! 🎉
@@ -590,4 +590,72 @@ We're going to choose the former, because it's easier.
 > It is likely that your application would benefit from leveraging these battle-tested solutions rather than try to rebuild them from scratch.
 
 Let's authenticate our users through a GitHub provider!
+
+Let's add it to our `providers` array inside `auth.ts`
+
+```ts
+import NextAuth from "next-auth";
+import GitHub from "next-auth/providers/github"
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers: [GitHub],
+});
+
+```
+
+Next, create an **`OAuth` app** inside our GitHub account.
+Navigate to `https://github.com/settings/developers`
+and click on `OAuth Apps`
+and click on `New OAuth App`.
+
+<p align="center">
+  <img width='800' src="https://github.com/dwyl/learn-nextjs/assets/17494745/bcf20102-d76f-474e-a144-f5623f1e3289"/>
+</p>
+
+Fill out the information.
+The default callback URL will be of the form of 
+`[origin]/api/auth/callback/[provider]`.
+While developing, you may use `localhost` as the `origin`.
+However, you'll have to chance this to your product's domain in production.
+
+```sh
+// Local
+http://localhost:3000/api/auth/callback/github
+ 
+// Prod
+https://app.company.com/api/auth/callback/github
+```
+
+<p align="center">
+  <img width='800' src="https://github.com/dwyl/learn-nextjs/assets/17494745/b57b4adf-a1bb-4ecc-bdd5-00725e84f99f"/>
+</p>
+
+After completing the form,
+you will be redirected to the page of your newly created `OAuth` app.
+Click on `Generate a new client secret`.
+
+<p align="center">
+  <img width='800' src="https://github.com/dwyl/learn-nextjs/assets/17494745/dab08580-337a-4ca7-b8d5-9f0c73b91862"/>
+</p>
+
+You will be shown the secret of the new app.
+Do not close the page, you will need to copy this `secret` and the shown `client ID.`
+
+<p align="center">
+  <img width='800' src="https://github.com/dwyl/learn-nextjs/assets/17494745/1b690614-cba3-4187-8448-72dc9e9fd62c"/>
+</p>
+
+In your `.env.local` file,
+add these two copied strings, like so.
+
+```sh
+AUTH_SECRET=
+
+AUTH_GITHUB_ID=
+AUTH_GITHUB_SECRET=
+```
+
+And that's all the configuration we need!
+Now it's time to authenticate people into our app!
+
 

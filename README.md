@@ -28,7 +28,7 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
   - [1. Organizing your content](#1-organizing-your-content)
     - [1.1 External  links and hidden routes](#11-external--links-and-hidden-routes)
     - [1.2 Adding items to the navbar](#12-adding-items-to-the-navbar)
-  - [2. Organizing your content](#2-organizing-your-content)
+  - [2. Adding authentication](#2-adding-authentication)
 
 
 # Why?
@@ -428,4 +428,21 @@ There are the basics on how to organize your content
 inside your website!
 
 
-## 2. Organizing your content
+## 2. Adding authentication
+
+Now that our website is in working order,
+let's work in adding authentication to it!
+This is important because
+you may want to use this website
+*for internal purposes*,
+meaning that **it can't be public-facing**.
+
+To address this issue,
+we are going to make the users have to sign in 
+through a given provider 
+to be able to visit private pages
+that we will define ourselves.
+
+Let's rock! 🎸
+
+

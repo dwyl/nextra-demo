@@ -27,6 +27,8 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
   - [0. Start a new project](#0-start-a-new-project)
   - [1. Organizing your content](#1-organizing-your-content)
     - [1.1 External  links and hidden routes](#11-external--links-and-hidden-routes)
+    - [1.2 Adding items to the navbar](#12-adding-items-to-the-navbar)
+  - [2. Organizing your content](#2-organizing-your-content)
 
 
 # Why?
@@ -316,5 +318,114 @@ In the top-level `_meta.json`,
 change it to the following.
 
 ```json
-
+{
+  "index": "My Homepage",
+  "contact": "Contact Us",
+  "api_reference": "API Reference",
+  "about": "About Us",
+  "github_link": {
+    "title": "Github",
+    "href": "https://github.com/shuding/nextra",
+    "newWindow": true
+  }
+}
 ```
+
+This will add a new link to the sidebar that,
+once clicked,
+will redirect the person to the `Github` page.
+
+You can also hide it. 
+Simply add the `display` property and set it to `hidden`,
+just like in `CSS`!
+
+```json
+{
+  "index": "My Homepage",
+  "contact": "Contact Us",
+  "api_reference": "API Reference",
+  "about": "About Us",
+  "github_link": {
+    "title": "Github",
+    "href": "https://github.com/shuding/nextra",
+    "newWindow": true,
+    "display": "hidden"
+  }
+}
+```
+
+### 1.2 Adding items to the navbar
+
+The navbar is a great way to further organize your content.
+You can show special pages on the navigation bar 
+instead of the sidebar.
+To do this, you need to use the `"type": "page"` property
+in the `_meta.json` file at top level.
+
+Let's add the `API Reference` to the navbar.
+To do this, edit the top-level `_meta.json` to look like so:
+
+```json
+{
+  "index": {
+    "title": "Hello!",
+    "type": "page"
+  },
+  "api_reference": {
+    "title": "API Reference",
+    "type": "page"
+  },
+  "about": {
+    "title": "About Us",
+    "type": "page"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "type": "page"
+  },
+  "github_link": {
+    "title": "Github",
+    "href": "https://github.com/shuding/nextra",
+    "newWindow": true,
+    "display": "hidden"
+  }
+}
+```
+
+This will make every single top-level file
+a page on the navbar.
+Inside `api_reference`,
+create a new file called `users.mdx` 
+and write whatever you want in it.
+Let's change the `_meta.json` file inside this directory
+to the following.
+
+```json
+{
+  "about": "about",
+  "---": {
+    "type": "separator"
+  },
+  "users": "users"
+}
+```
+
+Notice that we've added `"---"`. 
+This will add a separator between the two sidebar items.
+
+If you run `pnpm run dev`, 
+you will see that your site is organized differently.
+The top-level pages are in the navbar,
+and you can check the sidebar inside the `api_reference` folder contents.
+
+<p align="center">
+  <img width='800' src="ttps://github.com/dwyl/learn-nextjs/assets/17494745/ce73b6d9-6890-4ee4-9635-354f88cbe887"/>
+</p>
+
+Awesome! 🎉
+
+There are the basics on how to organize your content
+inside your website!
+
+
+## 2. Organizing your content

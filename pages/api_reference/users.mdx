@@ -1,0 +1,142 @@
+# Users API
+
+The Users API allows you to manage user data within your Nextra-powered documentation site. This endpoint provides functionalities to create, retrieve, update, and delete user information, making it a crucial component for any user-centric applications.
+
+## Endpoints
+
+### Get Users
+
+Retrieve a list of all users.
+
+**Endpoint:**
+```
+GET /api/users
+```
+
+**Response:**
+
+The response includes a list of user objects, each containing the following fields:
+- `id`: The unique identifier for the user.
+- `name`: The name of the user.
+- `email`: The email address of the user.
+- `role`: The role of the user within the system.
+
+**Example:**
+
+```json
+[
+  {
+    "id": "1",
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "role": "admin"
+  },
+  {
+    "id": "2",
+    "name": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "role": "editor"
+  }
+]
+```
+
+### Create User
+
+Add a new user to the system.
+
+**Endpoint:**
+```
+POST /api/users
+```
+
+**Request Body:**
+
+The request body should include the following fields:
+- `name` (required): The name of the user.
+- `email` (required): The email address of the user.
+- `role` (optional): The role of the user. Default is `viewer`.
+
+**Example:**
+
+```json
+{
+  "name": "Alice Johnson",
+  "email": "alice.johnson@example.com",
+  "role": "editor"
+}
+```
+
+**Response:**
+
+The response includes the created user object.
+
+```json
+{
+  "id": "3",
+  "name": "Alice Johnson",
+  "email": "alice.johnson@example.com",
+  "role": "editor"
+}
+```
+
+### Update User
+
+Modify an existing user's information.
+
+**Endpoint:**
+```
+PUT /api/users/:id
+```
+
+**Request Body:**
+
+The request body can include any of the following fields to update:
+- `name` (optional): The name of the user.
+- `email` (optional): The email address of the user.
+- `role` (optional): The role of the user.
+
+**Example:**
+
+```json
+{
+  "name": "Alice Johnson",
+  "email": "alice.johnson@newdomain.com",
+  "role": "admin"
+}
+```
+
+**Response:**
+
+The response includes the updated user object.
+
+```json
+{
+  "id": "3",
+  "name": "Alice Johnson",
+  "email": "alice.johnson@newdomain.com",
+  "role": "admin"
+}
+```
+
+### Delete User
+
+Remove a user from the system.
+
+**Endpoint:**
+```
+DELETE /api/users/:id
+```
+
+**Response:**
+
+The response includes a confirmation message.
+
+```json
+{
+  "message": "User deleted successfully."
+}
+```
+
+## Summary
+
+The Users API provides essential operations for managing users within your Nextra documentation site. Whether you need to add new users, update existing ones, or remove users, these endpoints offer the flexibility to handle all user-related tasks efficiently. For more information on other available APIs, refer back to the [API Reference](index).

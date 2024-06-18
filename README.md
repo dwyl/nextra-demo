@@ -25,7 +25,8 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
 - [Who?](#who)
 - [How?](#how)
   - [0. Start a new project](#0-start-a-new-project)
-- [1. Organizing your content](#1-organizing-your-content)
+  - [1. Organizing your content](#1-organizing-your-content)
+    - [1.1 External  links and hidden routes](#11-external--links-and-hidden-routes)
 
 
 # Why?
@@ -168,11 +169,17 @@ Create a file called `next.config.js` and add the following.
 ```js
 const withNextra = require('nextra')({
   theme: 'nextra-theme-docs',
-  themeConfig: './theme.config.jsx'
+  themeConfig: './theme.config.jsx',
+  defaultShowCopyCode: true
 })
  
 module.exports = withNextra()
 ```
+
+Here we add global configurations to our project.
+For example, we've added `defaultShowCopyCode: true`,
+which will make it so code snippets
+will have a copy button.
 
 Lastly, we need to create
 a corresponding `theme.config.jsx` file in your project’s root directory.
@@ -217,6 +224,97 @@ You've just set up your documentation website!
 Give yourself a pat on the back. 👏
 
 
-# 1. Organizing your content
+## 1. Organizing your content
+
+Now let's write some content!
+We are going to organize our documentation
+so it's easier to navigate.
+
+In `Nextra`, 
+the site and page structure can be configured via
+[`_meta.json`](https://nextra.site/docs/guide/organize-files) files.
+These files will affect the layout of the theme,
+especially the sidebar/navigation bar.
+
+For example, the title and order of a page shown in the sidebar
+should be configured in the `_meta.json` file as key-value pairs.
+Create the following structure in your project.
+
+```
+pages
+|_ api_reference
+    |_ _meta.json
+    |_ about.mdx
+|_ _meta.json
+|_ about.mdx
+|_ contact.mdx
+|_ index.mdx
+```
+
+Define the pages in the top-level `_meta.json`, like so.
+
+```json
+{
+  "index": "My Homepage",
+  "contact": "Contact Us",
+  "api_reference": "API Reference",
+  "about": "About Us"
+}
+```
+
+And in the nested `_meta.json` file,
+inside `api_reference`.
+
+```json
+{
+  "about": "about"
+}
+```
+
+As you can see, you can group pages together in directories
+**to create _an hierarchy_** of pages, 
+thus organizing them neatly.
+
+If you want a folder to have their own page,
+you can simply add a `.mdx` file
+a level above, with the name of the folder.
+Let's say we want `api_reference` to have an introductory page
+when we click on it on the sidebar.
+Simply create the file above the folder's level!
+
+```
+pages
+|_ api_reference
+    |_ _meta.json
+    |_ about.mdx
+|_ _meta.json
+|_ about.mdx
+|_ contact.mdx
+|_ api_reference.mdx   // added this
+|_ index.mdx
+```
+
+Alternatively, you can create an `index.mdx` file inside `api_reference`
+to achieve a similar effect.
 
 
+Now fill each `.mdx` with any content you want.
+Run `pnpm run dev` and see your pages organized!
+
+<p align="center">
+  <img width='800' src="https://github.com/dwyl/learn-nextjs/assets/17494745/a1122331-3416-4232-b412-272cae84d9d6"/>
+</p>
+
+
+### 1.1 External  links and hidden routes
+
+You can further customize the `_meta.json` 
+to show external links
+and hide some routes.
+
+In the top-level `_meta.json`,
+change it to the following.
+
+```json
+
+```

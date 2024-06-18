@@ -1,0 +1,24 @@
+# About API
+
+The About API provides information about the Nextra framework, including its version, features, and capabilities. This endpoint is useful for retrieving metadata about your documentation site and can be utilized in various parts of your application.
+
+## GET `/api/about`
+
+
+## Response
+
+The response includes the following fields:
+
+- `version`: The current version of Nextra.
+- `features`: A list of features available in this version.
+- `description`: A brief description of Nextra.
+
+## Example
+
+```json
+{
+  "version": "1.0.0",
+  "features": ["markdown support", "automatic navigation", "theme customization"],
+  "description": "Nextra is a static site generator for creating modern documentation websites."
+}
+```

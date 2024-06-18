@@ -24,6 +24,8 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
 - [What?](#what)
 - [Who?](#who)
 - [How?](#how)
+  - [0. Start a new project](#0-start-a-new-project)
+- [1. Organizing your content](#1-organizing-your-content)
 
 
 # Why?
@@ -89,4 +91,132 @@ or just want to discuss this further,
 
 
 # How?
+
+Are we ready to start? Let's go!
+
+> [!TIP]
+>
+> Some of the information found in this document
+> can also be found in the [`Nextra`'s offical docs](https://nextra.site/docs).
+> We recommend going through their documentation 
+> (it's not long) to better have a feeling over the framework.
+
+When using `Nextra`, 
+you first have to make a choice:
+- you either use a *default theme*.
+- you customize your own.
+
+The vast majority of people will go for the former.
+However, if you are looking to have a more customized look,
+you may have to create your own theme.
+[It's easier to start with a custom theme than using a default one and change it afterwards](https://github.com/shuding/nextra/issues/2926).
+
+In our case, 
+we'll start with the default theme and change it if needed.
+
+
+## 0. Start a new project
+
+Let's create our project.
+We first need to install some dependencies.
+We're going to use [`pnpm`](https://pnpm.io/)
+throughout the project to manage dependencies.
+
+```sh
+pnpm add next react react-dom nextra nextra-theme-docs
+```
+
+This will create a `package.json` file
+and install the dependencies under `node_modules`.
+
+Now, let's add some scripts to `package.json` 
+to be able to run our application.
+Add the following:
+
+```json
+"scripts": {
+  "dev": "next",
+  "build": "next build",
+  "start": "next start"
+},
+```
+
+Your `package.json` will look something like this.
+
+```json
+{
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^14.2.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "nextra": "^2.13.4",
+    "nextra-theme-docs": "^2.13.4"
+  }
+}
+```
+
+Next, we need to add a `Nextra` config file.
+Because we're starting a project from scratch,
+it has no idea it's a `Next.js` project.
+Create a file called `next.config.js` and add the following.
+
+```js
+const withNextra = require('nextra')({
+  theme: 'nextra-theme-docs',
+  themeConfig: './theme.config.jsx'
+})
+ 
+module.exports = withNextra()
+```
+
+Lastly, we need to create
+a corresponding `theme.config.jsx` file in your project’s root directory.
+It will be used to configure our `Nextra`'s site theme.
+We'll just add the basic ones.
+
+> [!TIP]
+>
+> You can check the full theme configurations
+> [in their documentation](https://nextra.site/docs/docs-theme/theme-configuration).
+
+Now we're ready to bounce!
+Because `Nextra` is a **file-based system framework**
+(much like `Next.js`),
+you will have to create all the documentation
+under the `pages` folder.
+Let's start create our first one under `pages/index.mdx`!
+
+```mdx
+# Welcome to our docs!
+ 
+Hello, world!
+```
+
+> [!NOTE]
+>
+> [`mdx`](https://mdxjs.com/) files are markdown files
+> that allow you to write `JSX` content.
+> You can import components and embed them within your markdown files.
+
+Let's see our handiwork.
+Run `pnpm run dev` 
+and visit `http://localhost:3000`.
+You should see your page!
+
+<p align="center">
+  <img width='800' src="https://github.com/dwyl/learn-nextjs/assets/17494745/532ac0ca-312b-44cf-ac9a-a8801888ae55"/>
+</p>
+
+Congratulations!
+You've just set up your documentation website!
+Give yourself a pat on the back. 👏
+
+
+# 1. Organizing your content
+
 

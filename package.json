@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "dev": "next",
+    "dev": "npm run private-route-gen && next",
+    "private-route-gen": "ts-node generateMiddleware.ts",
+    "prebuild": "npm run private-route-gen",
     "build": "next build",
     "start": "next start"
   },
@@ -14,6 +16,9 @@
   },
   "devDependencies": {
     "@types/node": "20.14.5",
+    "fast-glob": "^3.3.2",
+    "ts-morph": "^22.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "5.4.5"
   }
 }

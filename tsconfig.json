@@ -30,5 +30,13 @@
     "app/lib/placeholder-data.js",
     "scripts/seed.js"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+
+  // These are only used by `ts-node` to run the script that generates the private routes.
+  // These options are overrides used only by ts-node, same as the --compilerOptions flag and the TS_NODE_COMPILER_OPTIONS environment variable
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
 }

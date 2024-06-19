@@ -14,8 +14,8 @@ type MetaJson = {
 };
 
 type PrivateRoutes = {
-    [key: string]: string[]
-}
+  [key: string]: string[];
+};
 
 /**
  * This function looks at the file system under a path and goes through each `_meta.json` looking for private roots recursively.
@@ -31,7 +31,6 @@ function getPrivateRoutes(pagesDir: string): PrivateRoutes {
 
   // Iterate over the found meta files
   for (const file of metaFiles) {
-
     // Get the path of file and read it
     const dir = path.dirname(file);
     const metaJson: MetaJson = JSON.parse(fs.readFileSync(file, "utf-8"));
@@ -58,14 +57,13 @@ function getPrivateRoutes(pagesDir: string): PrivateRoutes {
   }
 
   return privateRoutes;
-};
+}
 
 // - - - - - - - - - - - - - - - - - -  - - - - -
 // `middleware.ts` is changed by executing the code below.
 
-
 const CONST_VARIABLE_NAME = "privateRoutesMap"; // Name of the constant inside `middleware.ts` to be manipulated
-const DIRECTORY = "pages"                       // Directory to look for the routes (should be `pages`, according to Nextra's file system)
+const DIRECTORY = "pages"; // Directory to look for the routes (should be `pages`, according to Nextra's file system)
 
 // Get private routes
 const pagesDir = path.join(__dirname, DIRECTORY);

@@ -369,8 +369,9 @@ To do this, edit the top-level `_meta.json` to look like so:
 ```json
 {
   "index": {
-    "title": "Hello!",
-    "type": "page"
+    "title": "Homepage",
+    "type": "page",
+    "display": "hidden"
   },
   "api_reference": {
     "title": "API Reference",
@@ -395,6 +396,9 @@ To do this, edit the top-level `_meta.json` to look like so:
 
 This will make every single top-level file
 a page on the navbar.
+We've hidden the `index.mdx`,
+because it's rendered by default when we enter the site
+and we can return to it if we click on the website's logo.
 Inside `api_reference`,
 create a new file called `users.mdx` 
 and write whatever you want in it.
@@ -657,5 +661,8 @@ AUTH_GITHUB_SECRET=
 
 And that's all the configuration we need!
 Now it's time to authenticate people into our app!
+
+
+
 
 

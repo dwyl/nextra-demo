@@ -1,11 +1,16 @@
 {
   "index": {
-    "title": "Hello!",
-    "type": "page"
+    "title": "Homepage",
+    "type": "page",
+    "display": "hidden"
   },
   "api_reference": {
     "title": "API Reference",
-    "type": "page"
+    "type": "page",
+    "private": {
+      "private": true,
+      "roles": ["role1", "role2"]
+    }
   },
   "about": {
     "title": "About Us",

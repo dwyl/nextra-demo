@@ -1,6 +1,38 @@
+import { auth } from "@/auth.ts"
+import { useData } from 'nextra/data'
+import Link from 'next/link'
+import { signOut } from "next-auth/react"
+import { LoginOrUserInfo } from "@/components/LoginOrUserInfo"
+
+export async function getServerSideProps(ctx) {
+  const session = await auth(ctx)
+
+return {
+      props: {
+        // We add an `ssg` field to the page props,
+        // which will be provided to the Nextra `useData` hook.
+        ssg: {
+          session
+        }
+      }
+    }
+}
+
+export const Info = () => {
+  // Get the data from SSG, and render it as a component.
+  const { session } = useData()
+  return <LoginOrUserInfo session={session}/>
+}
+
 # Welcome to Nextra Documentation
 
 Welcome to the Nextra documentation site! Nextra is a modern static site generator optimized for creating high-quality documentation websites with ease. This documentation will guide you through the setup, features, and best practices for using Nextra.
+
+---
+
+<Info/>
+
+---
 
 ## Getting Started
 
@@ -12,3 +44,5 @@ Explore the sections below to dive deeper into specific topics:
 - [Contact Us](contact)
 
 We hope you find Nextra useful for your documentation needs!
+
+

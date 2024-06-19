@@ -3,5 +3,9 @@
   "---": {
     "type": "separator"
   },
-  "users": "users"
+  "users": "users",
+  "mega_private": {
+    "title": "Mega Private Section",
+    "private": true
+  }
 }

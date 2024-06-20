@@ -6,6 +6,9 @@
   "users": "users",
   "mega_private": {
     "title": "Mega Private Section",
-    "private": true
+    "private": {
+      "private": true,
+      "roles": ["cant_enter"]
+    }
   }
 }

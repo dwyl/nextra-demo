@@ -4,12 +4,12 @@
     "type": "page",
     "display": "hidden"
   },
-  "api_reference": {
+  "reference_api": {
     "title": "API Reference",
     "type": "page",
     "private": {
       "private": true,
-      "roles": ["role1", "role2"]
+      "roles": ["user"]
     }
   },
   "about": {

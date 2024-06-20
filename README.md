@@ -30,6 +30,14 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
     - [1.2 Adding items to the navbar](#12-adding-items-to-the-navbar)
   - [2. Adding authentication](#2-adding-authentication)
     - [2.1 Adding Github provider](#21-adding-github-provider)
+    - [2.2 Letting people `Sign In` and `Sign Out`](#22-letting-people-sign-in-and-sign-out)
+  - [3. Protecting routes](#3-protecting-routes)
+    - [3.1 A word about `middleware.ts`](#31-a-word-about-middlewarets)
+    - [3.2 Adding `middleware.ts` logic](#32-adding-middlewarets-logic)
+    - [3.3 Configuring `auth.ts`](#33-configuring-authts)
+  - [4. Generating private routes](#4-generating-private-routes)
+- [Change theme](#change-theme)
+- [zones](#zones)
 
 
 # Why?
@@ -663,6 +671,494 @@ And that's all the configuration we need!
 Now it's time to authenticate people into our app!
 
 
+### 2.2 Letting people `Sign In` and `Sign Out`
+
+With all the configuration out of the way,
+it's time to a way for people to **sign in** and **sign out** of our Nextra website.
+
+Before continuing, 
+let's change our site's structure a little bit.
+Make it like so.
+
+```
+pages
+|_ reference_api          // yes, change from 'api_reference' to 'reference_api'
+    |_ mega_private       // add this new folder
+      |_ _meta.json
+      |_ hello.mdx
+    |_ _meta.json
+    |_ about.mdx
+    |_ users.mdx
+|_ _meta.json
+|_ about.mdx
+|_ api_reference.mdx
+|_ contact.mdx
+|_ index.mdx
+```
+
+> [!IMPORTANT]
+>
+> Change the root `_meta.json` file pertaining to `"api_reference"`
+> to `"reference_api"`, and the folder as well.
+>
+> This is important because we are going to have a middleware
+> that is going to match routes to perform authorization checks.
+> `Next.js` projects usually have APIs under `/api`,
+> which means the middleware was not going to perform verifications on anything
+> under `api`.
+
+Create a new folder `mega_private` inside `api_reference`.
+We'll use this later.
+You can write whatever you want in it.
+Keep the `_meta.json` inside `mega_private` simple, like so.
+
+```json
+{
+    "hello": "Hello page"    
+}
+```
+
+Great!
+
+`next-auth` provides a set of built-in pages
+for people to go through their authentication journey
+(sign in, sign up, sign out, error, etc...).
+[Although you can customize your own pages](https://authjs.dev/guides/pages/signin),
+we are going to leverage these built-in pages
+to keep the tutorial simple.
+
+To allow people to sign in,
+let's create a component to be shown in `pages/index.mdx`,
+the root page of the site.
+
+For this, create a folder called `components` on the root of the project.
+Inside of `components`, create `LoginOrUserInfo`,
+and inside this one create a file called `index.ts` (`components/LoginOrUserInfo/index.tsx`).
+
+```ts
+import { signOut, signIn } from "next-auth/react";
+import { Session } from "next-auth";
+
+export function LoginOrUserInfo({ session } : Readonly<{session: Session}>) {
+  if (session?.user) {
+    return (
+      <div>
+        <span>
+          Welcome <b>{session.user.name}</b>
+        </span>{" "}
+        <br />
+        <button onClick={() => signOut()}>SIGN OUT</button>
+      </div>
+    );
+  } else {
+    return <button onClick={() => signIn()}>SIGN IN</button>;
+  }
+}
+```
+
+We are exporting a function `LoginOrUserInfo` 
+that receives `Session` object (from `next-auth`).
+Inside this component, what we do is really simple:
+show his name and a `SignOut` button if they are logged in;
+otherwise, show a button to `SignIn`.
+
+We are leveraging both `signIn` and `signOut` functions from `next-auth`.
+
+> [!WARNING]
+>
+> By creating these nested folders,
+> we have to update the `tsconfig.json` file to encompass
+> files that are nested on more than two levels.
+>
+> ```json
+> "include": [
+>   "next-env.d.ts",
+>   "*/**/*.ts",       // add this line
+>   "**/*.ts",
+>   "**/*.tsx",
+>   ".next/types/**/*.ts",
+>   "app/lib/placeholder-data.js",
+>   "scripts/seed.js"
+> ],
+> ```
+
+Now let's use our newly created component.
+Go to `pages/index.mdx` and add the following code to the top.
+
+```mdx
+import { auth } from "@/auth.ts"
+import { useData } from 'nextra/data'
+import Link from 'next/link'
+import { signOut } from "next-auth/react"
+import { LoginOrUserInfo } from "@/components/LoginOrUserInfo"
+
+export async function getServerSideProps(ctx) {
+  const session = await auth(ctx)
+
+return {
+      props: {
+        // We add an `ssg` field to the page props,
+        // which will be provided to the Nextra `useData` hook.
+        ssg: {
+          session
+        }
+      }
+    }
+}
+
+export const Info = () => {
+  // Get the data from SSG, and render it as a component.
+  const { session } = useData()
+  return <LoginOrUserInfo session={session}/>
+```
+
+We are using [`getServerSideProps` ](https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props)
+to fetch the session from the `auth` function from `next-auth`.
+For more information about this inside `Nextra`,
+visit https://nextra.site/docs/guide/ssg.
+
+We need to return the session inside an object `props`
+and adding a named property called `ssg`
+with the data we want to send over the components we want to display.
+`Nextra` retrieves this data using the `useData()` hook.
+
+In the `Info` component, we fetch the `session` object
+from the `auth` and pass it to the component 
+we've created `<LoginOrUserInfo>`.
+
+All that's left is using this component in our `.mdx` file.
+Simply add `<Info/>` (the component we've created inside `.mdx`)
+wherever you want in the page1
+
+If you run the application, you should be able to sign in and sign out!
+
+<p align="center">
+  <img width='30%' src="https://github.com/dwyl/nextra-demo/assets/17494745/cdbff626-2d2b-4ecf-a100-23765db61bfe"/>
+  <img width='30%' src="https://github.com/dwyl/nextra-demo/assets/17494745/62f8dc3e-cc47-477d-88ef-9d916fd8da72"/>
+  <img width='30%' src="https://github.com/dwyl/nextra-demo/assets/17494745/a5aeb1c5-a341-4287-942a-564343f1a0b5"/>
+</p>
+
+We now have access to [`JWT` tokens](https://jwt.io/introduction) in our application,
+where `GitHub`'s `OAuth` provider is providing them for us.
+
+Now let's start using it to start protecting routes!
+
+
+## 3. Protecting routes
+
+We now have a basic authentication flow in our site,
+with `GitHub` providing and managing the tokens for our application for us.
+It's in our interest to restrict certain routes to specific users
+with specific roles if we ever want to make our awesome documentation site
+*available to different clients*.
+
+
+### 3.1 A word about `middleware.ts`
+
+Normally, when developing applications that follow the normal
+`Frontend -> Backend -> Database` convention,
+you usually want to have security measures
+**as close to the data as possible**.
+
+[With `React Server Components` being introduced in `Next.js`](https://nextjs.org/docs/app/building-your-application/rendering/server-components),
+the line between server and client gets blurred.
+Data handling is paramount in understanding where information is processed
+and subsequently made available.
+So we always have to be careful to know
+how authentication and how protecting routes is implemented
+and *where* it is processed,
+so it's not subject to malicious actors.
+
+
+> [!NOTE]
+>
+> To learn more about Data Access Layers,
+> please visit https://x.com/delba_oliveira/status/1800921612105011284
+> and https://nextjs.org/blog/security-nextjs-server-components-actions.
+> These links provide great insights on how to implement a Data Access Layer
+> to better encapsulate your data and minimize security pitfalls.
+
+For this purpose,
+because `Nextra` statically generates pages,
+we are going to be using [**`middleware`**](https://nextjs.org/docs/pages/building-your-application/routing/middleware)
+to protect the routes.
+[`next-auth`](https://authjs.dev/getting-started/session-management/protecting?framework=express#api-routes)
+warns people to
+**on middleware exclusively for authorization and to always ensure that the session is verified as close to your data fetching as possible.**
+While that is true
+(and a reiteration of what was aforementioned),
+protecting the routes in our application
+through `middleware`
+is optimistically secure enough
+(as it runs on the server-side),
+as it runs on every request,
+including prefetched routes.
+Additionally, [`Next.js` recommends doing so](https://nextjs.org/docs/pages/building-your-application/authentication#protecting-routes-with-middleware).
+
+> "This is important for keeping areas like the user dashboard protected while having other pages like marketing pages be public.
+> It's recommended to apply Middleware across all routes and specify exclusions for public access.
+
+
+### 3.2 Adding `middleware.ts` logic
+
+As per `Next.js`'s convention,
+to add this middleware,
+we need to create a `middleware.ts` file at the root of the project.
+
+Create it and add the following code to it:
+
+```ts
+// middleware.ts
+
+"server only";
+
+import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+
+// !!!! DO NOT CHANGE THE NAME OF THE VARIABLE !!!!
+const privateRoutesMap: any = {};
+
+export default auth(async (req, ctx) => {
+  const currentPath = req.nextUrl.pathname;
+  const basePath = req.nextUrl.basePath;
+  const isProtectedRoute = currentPath in privateRoutesMap
+
+  if(isProtectedRoute) {
+    // Check for valid session
+    const session = req.auth
+
+    // Redirect unauthed users
+    if(!session?.user || !session.user.role) {
+      return NextResponse.redirect(new URL('/api/auth/signin', req.nextUrl))
+    }
+
+    // Redirect users that don't have the necessary roles
+    const neededRolesForPath = privateRoutesMap[currentPath]
+    if(!(session.user.role && session.user.role in neededRolesForPath)) {
+      return NextResponse.redirect(new URL('/api/auth/signin', req.nextUrl))
+    }
+  }
+
+  return NextResponse.next()
+});
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
+}
+
+```
+
+Let's break down what we just wrote:
+
+- **`privateRoutesMap`** is an object/map that will have the **path** as `key`
+and the **array of roles needed to access the path** as `value`.
+This variable will be changed on build-time,
+so do not change its name!
+- we export **`auth`** as default from `middleware.ts`.
+This function is called before every route server-side.
+Inside it, we check the path and the session cookie.
+With these, we can know *if the route is protected* or not.
+If it is, we check if the person can access it with the given role.
+If any of these conditions fail,
+the person is redirected to the Sign In page.
+- we also export a **`config`** object,
+with a `matcher` property.
+We use [`RegEx`](https://regexr.com/) to configure which paths we want the middleware to run on.
+
+> [!NOTE]
+>
+> Your `Typescript` compiler may be complaining
+> because `role` is not a property inside `user`.
+> Don't worry, we'll fix this now.
+
+
+### 3.3 Configuring `auth.ts`
+
+`middleware.ts` assumes the `JWT` token to have a role
+in order to do role-based authorization.
+For it to have access to it
+(and throughout the whole application),
+we ought to head over to `auth.ts` 
+and do additional configuration.
+
+Open `auth.ts` and change it the following.
+
+```ts
+// auth.ts
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers: [
+    GitHub({
+      profile(profile) {
+        // GitHub's OAuth apps don't allow you to define roles.
+        // So `profile` here doesn't have a `role` property.
+        // But on other providers, you'd add the role here through it.
+        return {
+          id: profile.id.toString(),
+          name: profile.name ?? profile.login,
+          email: profile.email,
+          image: profile.avatar_url,
+          role: "user",
+        };
+      },
+    }),
+  ],
+  callbacks: {
+    jwt({ token, user, account, profile }) {
+      // Normally, it would be like this
+      // if(user) return {...token, role: token.role}
+
+      // But because Github's provider is not passing the role
+      // (it should, according to https://authjs.dev/guides/role-based-access-control#with-jwt -
+      // maybe it's because v5 is still in beta), we're just gonna append it every time
+      return token
+    },
+    session({ session, token }) {
+      session.user.role = token.role;
+      return session;
+    },
+  },
+});
+```
+
+As usual, let's break it down!
+
+- the `GitHub` provider accepts a **`profile()`** callback.
+In this callback, we receive a `Profile` returned by the `OAuth` provider
+(in our case, it's `GitHub`).
+We can return a subset using the profile's information
+to **define user's information in our application**.
+By default, it returns the
+`id`, `email`, `name`, `image`,
+but we can add more.
+That's what we did, by adding the **`role`** property.
+
+> [!NOTE]
+>
+> If you're using a custom provider,
+> it is your responsibility to return the role so you can capture it in
+> your `Next.js`/`Nextra` application.
+
+- we defined **`callbacks`** to add the role to our `JWT` tokens
+and `session` cookies.
+In order, the `jwt` callback receives the user information we've defined earlier.
+We append the `role` to the token.
+Afterwards, the `session` callback is invoked,
+where we use the `role` property we've just appended to the `token`
+and add it to the `session` cookie.
+
+> [!NOTE]
+>
+> In our code, we hardcode it every time.
+> It is because, at the time of writing,
+> `next-auth` is releasing a `v5`,
+> which has some bugs,
+> including the `GitHub` provider not properly downstreaming the user
+> to the `jwt` and `session` callbacks.
+> They receive the `user` as `undefined`.
+>
+> Unfortunately, this not an isolated occurrence.
+> https://stackoverflow.com/questions/76986309/nextauth-nextjs-13-unable-to-add-user-role
+> describes our exact scenario
+> and doesn't have an answer 😕.
+>
+> Here are a few more examples.
+> Hopefully it will be resolved in time:
+> - https://github.com/nextauthjs/next-auth/issues/9836
+> - https://github.com/nextauthjs/next-auth/discussions/9609
+> - https://stackoverflow.com/questions/72073321/why-did-user-object-is-undefined-in-nextauth-session-callback
+> - https://github.com/nextauthjs/next-auth/discussions/8456
+>
+> If you're using a custom provider,
+> it seems this is unlikely to happen to you.
+> In the links above,
+> people found solutions using custom providers
+> and not the in-built ones, like we are using in this demo.
+
+But that's not all!
+Because we are effectively
+*extending* the properties of the `User`,
+we can [**augment it through types**](https://authjs.dev/getting-started/typescript#module-augmentation),
+so `Typescript` doesn't complain about `role`
+being an undefined property.
+
+In the same `auth.ts` file,
+add the following code at the top.
+
+```ts
+import { } from 'next-auth/adapters';
+import GitHub from "next-auth/providers/github";
+import NextAuth, { type DefaultSession } from "next-auth";
+import { } from "next-auth/jwt";
+
+// We need to add the role to the JWT inside `NextAuth` below, so the `middleware.ts` can have access to it.
+// The problem is that it wasn't added this `role` custom field, even if we defined it in `auth.ts`.
+// Apparently, the problem is with the types of `next-auth`, which we need to redefine.
+// See https://stackoverflow.com/questions/74425533/property-role-does-not-exist-on-type-user-adapteruser-in-nextauth
+// and see https://authjs.dev/getting-started/typescript#module-augmentation.
+
+declare module "next-auth" {
+  interface Session extends DefaultSession {
+    /**
+     * By default, TypeScript merges new interface properties and overwrites existing ones.
+     * In this case, the default session user properties will be overwritten,
+     * with the new ones defined above. To keep the default session user properties,
+     * we need to add them back into the newly declared interface.
+     */
+    user: DefaultSession["user"] & {
+      role?: string;
+    };
+  }
+
+  interface User {
+    // Additional properties here:
+    role?: string;
+  }
+}
+
+declare module "next-auth/adapters" {
+  interface AdapterUser {
+    // Additional properties here:
+    role?: string;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    role?: string;
+  }
+}
+```
+
+And that's it! 🎉
+Give yourself a pat on the back!
+
+Now that we have the authentication and authorization set up,
+it's time to *finally use it*.
+
+
+## 4. Generating private routes
 
 
 
+- adding jwt refresh token  https://authjs.dev/guides/refresh-token-rotation
+
+
+
+
+# Change theme
+
+- custom theme is the only option
+- although yuyou can change some aspects of the sidebar (https://nextra.site/docs/docs-theme/theme-configuration#customize-sidebar-content), you can't do it on the navbar (https://github.com/shuding/nextra/discussions/2799). Either way, the way Nextra does it doesn't allow us to have access to the authorization and change the display accordingly. We need to go deeper.
+
+# zones 
+https://github.com/shuding/nextra/discussions/93

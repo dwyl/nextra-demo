@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { signOut } from "next-auth/react";
+import { signOut, signIn } from "next-auth/react";
 import { Session } from "next-auth";
 
 export function LoginOrUserInfo({ session } : Readonly<{session: Session}>) {
@@ -10,10 +9,10 @@ export function LoginOrUserInfo({ session } : Readonly<{session: Session}>) {
           Welcome <b>{session.user.name}</b>
         </span>{" "}
         <br />
-        <button onClick={() => signOut()}>Signout</button>
+        <button onClick={() => signOut()}>SIGN OUT</button>
       </div>
     );
   } else {
-    return <Link href="/api/auth/signin">LOGIN</Link>;
+    return <button onClick={() => signIn()}>SIGN IN</button>;
   }
 }

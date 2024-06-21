@@ -20,6 +20,7 @@ type PrivateRoutes = {
 /**
  * This function looks at the file system under a path and goes through each `_meta.json` looking for private roots recursively.
  * It is expecting the `_meta.json` values of keys to have a property called "private" to consider the route as private for specific roles.
+ * If a parent is private, all the children are private as well. The roles **are not propagated to the children**.
  * @param pagesDir path to recursively look for.
  * @returns map of private routes as key and array of roles that are permitted to access the route.
  */
@@ -29,30 +30,61 @@ function getPrivateRoutes(pagesDir: string): PrivateRoutes {
   // Find all _meta.json files recursively
   const metaFiles = globSync(path.join(pagesDir, "**/_meta.json"));
 
+  // Variable to keep track if parent is private on nested routes and its role
+  const rootPrivateSettings: { [key: string]: { private: boolean, roles: string[] } } = {};
+
   // Iterate over the found meta files
   for (const file of metaFiles) {
     // Get the path of file and read it
     const dir = path.dirname(file);
     const metaJson: MetaJson = JSON.parse(fs.readFileSync(file, "utf-8"));
 
-    // Iterate over the key/value pairs
+    // Iterate over the key/value pairs of the "_meta.json" file
     for (const [key, meta] of Object.entries(metaJson)) {
-      // Check if the current meta has a private property
+      const route = path.join(dir, key)
+                    .replace(pagesDir, '').replace(/\\/g, '/');
+
+      // Check if the current meta has a "private" property
       if (meta.private !== undefined) {
-        if (typeof meta.private === "boolean") {
-          // If private is a boolean, directly use it
+        if (typeof meta.private === 'boolean') {
           if (meta.private) {
-            const route = path.join(dir, key).replace(pagesDir, "").replace(/\\/g, "/");
-            privateRoutes[route] = [];
+            privateRoutes[route] = []
+            rootPrivateSettings[dir] = { private: true, roles: [] };
           }
+        } 
+        // If the "private" property is an object with possible roles
+        else if (meta.private.private === true) {
+          const roles = meta.private.roles ? meta.private.roles : [];
+          privateRoutes[route] = roles
+          rootPrivateSettings[dir] = { private: true, roles: roles };
         }
-        // If private is an object with private true and roles array (which can be omitted)
-        else if (meta.private.private) {
-          const route = path.join(dir, key).replace(pagesDir, "").replace(/\\/g, "/");
-          privateRoutes[route] = meta.private.roles || [];
+      } else {
+        // Check if the parent folder is private and inherit roles
+        const parentDir = path.resolve(dir, '..');
+        if (rootPrivateSettings[parentDir] && rootPrivateSettings[parentDir].private) {
+          const parentRoles = rootPrivateSettings[parentDir].roles;
+          privateRoutes[route] = parentRoles;
         }
-        // Do nothing if private is an object with private false or without roles array
       }
+    }
+  }
+
+
+  // Now let's just do a second pass to clean-up possible unwanted/invalid routes
+  for (const route of Object.keys(privateRoutes)) {
+    const fullPath = path.join(pagesDir, route);
+    const lastSegment = route.split('/').pop();
+
+    // Remove separators or any route that doesn't correspond to an existing file/directory
+    if (lastSegment === '---') {
+      delete privateRoutes[route];
+      continue;
+    }
+  
+    // Check for the existence of .mdx file
+    const mdxPath = `${fullPath}.mdx`;
+    if (!fs.existsSync(fullPath) && !fs.existsSync(mdxPath)) {
+      delete privateRoutes[route];
     }
   }
 

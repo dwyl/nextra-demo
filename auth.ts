@@ -1,7 +1,7 @@
-import { } from 'next-auth/adapters';
 import GitHub from "next-auth/providers/github";
 import NextAuth, { type DefaultSession } from "next-auth";
-import { } from "next-auth/jwt";
+import {  DefaultJWT } from "next-auth/jwt";
+import { AdapterSession } from 'next-auth/adapters';
 
 // We need to add the role to the JWT inside `NextAuth` below, so the `middleware.ts` can have access to it.
 // The problem is that it wasn't added this `role` custom field, even if we defined it in `auth.ts`.
@@ -64,11 +64,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     jwt({ token, user, account, profile }) {
       // Normally, it would be like this
       // if(user) return {...token, role: token.role}
+      // return token
 
       // But because Github's provider is not passing the role
       // (it should, according to https://authjs.dev/guides/role-based-access-control#with-jwt -
       // maybe it's because v5 is still in beta), we're just gonna append it every time
-      return token
+      return {...token, role: "user"}
     },
     session({ session, token }) {
       session.user.role = token.role;

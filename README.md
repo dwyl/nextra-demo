@@ -36,6 +36,12 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
     - [3.2 Adding `middleware.ts` logic](#32-adding-middlewarets-logic)
     - [3.3 Configuring `auth.ts`](#33-configuring-authts)
   - [4. Generating private routes](#4-generating-private-routes)
+    - [4.1 Installing `ts-morph` and setup](#41-installing-ts-morph-and-setup)
+    - [4.2 Creating `generatePrivateRoutes.ts`](#42-creating-generateprivateroutests)
+    - [4.3 Implementing private route retrieval function](#43-implementing-private-route-retrieval-function)
+      - [4.3.1 Defining `_meta.json` files with `private` properties](#431-defining-_metajson-files-with-private-properties)
+      - [4.3.2 Implementing the function](#432-implementing-the-function)
+    - [4.4 Running the script before building](#44-running-the-script-before-building)
 - [Change theme](#change-theme)
 - [zones](#zones)
 
@@ -688,6 +694,7 @@ pages
       |_ hello.mdx
     |_ _meta.json
     |_ about.mdx
+    |_ mega_private.mdx  // This is the index page of `mega_private` that will show on the sidebar. Write whatever.
     |_ users.mdx
 |_ _meta.json
 |_ about.mdx
@@ -920,7 +927,6 @@ const privateRoutesMap: any = {};
 
 export default auth(async (req, ctx) => {
   const currentPath = req.nextUrl.pathname;
-  const basePath = req.nextUrl.basePath;
   const isProtectedRoute = currentPath in privateRoutesMap
 
   if(isProtectedRoute) {
@@ -934,7 +940,7 @@ export default auth(async (req, ctx) => {
 
     // Redirect users that don't have the necessary roles
     const neededRolesForPath = privateRoutesMap[currentPath]
-    if(!(session.user.role && session.user.role in neededRolesForPath)) {
+    if(!(session.user.role && neededRolesForPath.includes(session.user.role))) {
       return NextResponse.redirect(new URL('/api/auth/signin', req.nextUrl))
     }
   }
@@ -987,7 +993,7 @@ We use [`RegEx`](https://regexr.com/) to configure which paths we want the middl
 in order to do role-based authorization.
 For it to have access to it
 (and throughout the whole application),
-we ought to head over to `auth.ts` 
+we ought to head over to `auth.ts`
 and do additional configuration.
 
 Open `auth.ts` and change it the following.
@@ -1016,11 +1022,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     jwt({ token, user, account, profile }) {
       // Normally, it would be like this
       // if(user) return {...token, role: token.role}
+      // return token
 
       // But because Github's provider is not passing the role
       // (it should, according to https://authjs.dev/guides/role-based-access-control#with-jwt -
       // maybe it's because v5 is still in beta), we're just gonna append it every time
-      return token
+      return {...token, role: "user"}
     },
     session({ session, token }) {
       session.user.role = token.role;
@@ -1084,21 +1091,32 @@ and add it to the `session` cookie.
 > people found solutions using custom providers
 > and not the in-built ones, like we are using in this demo.
 
+
+> [!IMPORTANT]
+>
+> To make the experience better for the user,
+> we can implement a **refresh token rotation system**,
+> where once a token expires,
+> the application automatically refreshes it instead of asking the user to sign in again.
+>
+> Read https://authjs.dev/guides/refresh-token-rotation to implement this with `next-auth`.
+
 But that's not all!
 Because we are effectively
 *extending* the properties of the `User`,
 we can [**augment it through types**](https://authjs.dev/getting-started/typescript#module-augmentation),
 so `Typescript` doesn't complain about `role`
-being an undefined property.
+being an `undefined` property.
 
 In the same `auth.ts` file,
 add the following code at the top.
 
 ```ts
-import { } from 'next-auth/adapters';
 import GitHub from "next-auth/providers/github";
 import NextAuth, { type DefaultSession } from "next-auth";
-import { } from "next-auth/jwt";
+// we don't use these but we need to import something so we can override the interface
+import {  DefaultJWT } from "next-auth/jwt";
+import { AdapterSession } from 'next-auth/adapters';
 
 // We need to add the role to the JWT inside `NextAuth` below, so the `middleware.ts` can have access to it.
 // The problem is that it wasn't added this `role` custom field, even if we defined it in `auth.ts`.
@@ -1148,10 +1166,330 @@ it's time to *finally use it*.
 
 ## 4. Generating private routes
 
+As you may have noticed by now,
+`Nextra` statically generates the page for you
+following the structure and the `_meta.json` files
+that you define in your project.
+These changes are then reflected in your navbar and sidebar.
+
+However, there is *no way for us to define private routes*
+and **use them at build-time**,
+like you do when generating the pages with `Nextra`.
+Unfortunately, `Nextra` doesn't have this feature in place,
+and authentication is not something they had in mind to implement
+for a framework that was primarily meant for public-facing documentation.
+
+*However*, it is possible to do this,
+considering what was discussed in
+[3.1 A word about `middleware.ts`](#31-a-word-about-middlewarets),
+_as long as we have access to the private routes at **build-time**_.
+
+To accomplish this, we're using [`ts-morph`](https://ts-morph.com/),
+a package that will allow us to manipulate Typescript source files.
+We will create a script with `ts-morph` that manipulates the `const privateRoutesMap` inside `middleware.ts`.
+This script will populate the `const` with all the private routes
+and the needed roles to access them.
+
+Let's crack on!
 
 
-- adding jwt refresh token  https://authjs.dev/guides/refresh-token-rotation
+### 4.1 Installing `ts-morph` and setup
 
+Install `ts-morph`, [`ts-node`](https://www.npmjs.com/package/ts-node) (to run the script we're implementing)
+and [`fast-glob`](https://www.npmjs.com/package/fast-glob)
+(to traverse the file system).
+
+```sh
+pnpm add ts-morph ts-node fast-glob
+```
+
+After installing these dependencies,
+we will have to adjust our `tsconfig.json` file
+so we can run our script independently.
+Below the `exclude` property, in the last line,
+add the following piece of code.
+
+```json
+  "exclude": ["node_modules"],
+
+  // These are only used by `ts-node` to run the script that generates the private routes.
+  // These options are overrides used only by ts-node, same as the --compilerOptions flag and the TS_NODE_COMPILER_OPTIONS environment variable
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
+```
+
+Great!
+Let's start implementing our script now.
+
+
+### 4.2 Creating `generatePrivateRoutes.ts`
+
+In the root of the project,
+create a file called `generatePrivateRoutes.ts`.
+Add the following code.
+
+```ts
+import { Project } from "ts-morph";
+import path from "path";
+import fs from "fs";
+import { globSync } from "fast-glob";
+
+// - - - - - - - - - - - - - - - - - -  - - - - -
+// `middleware.ts` is changed by executing the code below.
+
+const CONST_VARIABLE_NAME = "privateRoutesMap"; // Name of the constant inside `middleware.ts` to be manipulated
+const DIRECTORY = "pages"; // Directory to look for the routes (should be `pages`, according to Nextra's file system)
+
+// Get private routes
+const pagesDir = path.join(__dirname, DIRECTORY);
+const privateRoutes = getPrivateRoutes(pagesDir);
+
+// Initialize the project and source file
+const project = new Project();
+const sourceFile = project.addSourceFileAtPath(path.resolve(__dirname, "middleware.ts"));
+
+// Find the variable to replace and change it's declaration
+const variable = sourceFile.getVariableDeclaration(CONST_VARIABLE_NAME);
+if (variable) {
+  variable.setInitializer(JSON.stringify(privateRoutes));
+  sourceFile.saveSync();
+} else {
+  console.error("Variable not found in `middleware.ts`. File wasn't changed.");
+}
+```
+
+The code is fairly simple.
+We get the private routes by calling a function called `getPrivateRoutes()`
+(which we will implement shortly).
+Then, we find the `middleware.ts` file
+and find the variable we want to change.
+If we do find it, we change its initialization
+to the private routes map we retrieved earlier.
+Otherwise, we log an error.
+
+Now, it's time to add the function
+that will *retrieve the private routes*!
+
+
+### 4.3 Implementing private route retrieval function
+
+Our function `getPrivateRoutes` will need to recursively iterate
+over a given folder directory and find a way to know which routes are private.
+As of now, there's no way of doing so.
+
+That's why we're going
+**to define a new property inside `_meta.json` files**.
+
+
+#### 4.3.1 Defining `_meta.json` files with `private` properties
+
+We need to tell our function which pages/routes are private.
+To do this, we are going to use the `_meta.json` files
+that come with `Nextra`.
+
+To achieve this,
+we are going to allow people to declare a route as private
+by adding a **`private`** property to a route defined in the respective `_meta.json`.
+
+```json
+// pages/_meta.json
+{
+  "index": {
+    "title": "Homepage",
+    "type": "page",
+    "display": "hidden"
+  },
+  "reference_api": {
+    "title": "API Reference",
+    "type": "page",
+    "private": {                // We add this property to make `reference_api` private
+      "private": true,
+      "roles": ["user"]
+    }
+  },
+  "about": {
+    "title": "About Us",
+    "type": "page"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "type": "page"
+  },
+  "github_link": {
+    "title": "Github",
+    "href": "https://github.com/shuding/nextra",
+    "newWindow": true,
+    "display": "hidden"
+  }
+}
+```
+
+As you can see, we've added a property called **`private`**
+to the `reference_api` route,
+where we define if it's private or not by boolean in the `private` property
+and where we define the roles that can access it
+in the `roles` property.
+
+Alternatively, people can define private routes by simply
+passing `"private": true`, instead of passing an object.
+In these cases, the `roles` empty will default to an empty array,
+
+```json
+  "reference_api": {
+    "title": "API Reference",
+    "type": "page",
+    "private": true             // Simpler version
+  },
+```
+
+We'll take into account both of these scenarios.
+
+
+#### 4.3.2 Implementing the function
+
+Okay, now let's start coding our function!
+Inside `generatePrivateRoutes.ts`,
+add this function above the `ts-morph` code
+we've written earlier.
+
+```ts
+// Types for the `_meta.json` structure
+type PrivateInfo = {
+  private: boolean;
+  roles?: string[];
+};
+
+type MetaJson = {
+  [key: string]: string | any | PrivateInfo;
+};
+
+type PrivateRoutes = {
+  [key: string]: string[];
+};
+
+/**
+ * This function looks at the file system under a path and goes through each `_meta.json` looking for private routes recursively.
+ * It is expecting the `_meta.json` values of keys to have a property called "private" to consider the route as private for specific roles.
+ * If a parent is private, all the children are private as well. The children inherit the roles of their direct parent.
+ * @param pagesDir path to recursively look for.
+ * @returns map of private routes as key and array of roles that are permitted to access the route.
+ */
+function getPrivateRoutes(pagesDir: string): PrivateRoutes {
+  let privateRoutes: PrivateRoutes = {};
+
+  // Find all _meta.json files recursively
+  const metaFiles = globSync(path.join(pagesDir, "**/_meta.json"));
+
+  // Variable to keep track if parent is private on nested routes and its role
+  const rootPrivateSettings: { [key: string]: { private: boolean; roles: string[] } } = {};
+
+  // Iterate over the found meta files
+  for (const file of metaFiles) {
+    // Get the path of file and read it
+    const dir = path.dirname(file);
+    const metaJson: MetaJson = JSON.parse(fs.readFileSync(file, "utf-8"));
+
+    // Iterate over the key/value pairs of the "_meta.json" file
+    for (const [key, meta] of Object.entries(metaJson)) {
+      const route = path.join(dir, key).replace(pagesDir, "").replace(/\\/g, "/");
+
+      // Check if the current meta has a "private" property
+      if (meta.private !== undefined) {
+        if (typeof meta.private === "boolean") {
+          if (meta.private) {
+            privateRoutes[route] = [];
+            rootPrivateSettings[dir] = { private: true, roles: [] };
+          }
+        }
+        // If the "private" property is an object with possible roles
+        else if (meta.private.private === true) {
+          const roles = meta.private.roles ? meta.private.roles : [];
+          privateRoutes[route] = roles;
+          rootPrivateSettings[dir] = { private: true, roles: roles };
+        }
+      } else {
+        // Check if the parent folder is private and inherit roles
+        const parentDir = path.resolve(dir, "..");
+        if (rootPrivateSettings[parentDir] && rootPrivateSettings[parentDir].private) {
+          const parentRoles = rootPrivateSettings[parentDir].roles;
+          privateRoutes[route] = parentRoles;
+        }
+      }
+    }
+  }
+
+  // Now let's just do a second pass to clean-up possible unwanted/invalid routes
+  for (const route of Object.keys(privateRoutes)) {
+    const fullPath = path.join(pagesDir, route);
+    const lastSegment = route.split("/").pop();
+
+    // Remove separators or any route that doesn't correspond to an existing file/directory
+    if (lastSegment === "---") {
+      delete privateRoutes[route];
+      continue;
+    }
+
+    // Check for the existence of .mdx file
+    const mdxPath = `${fullPath}.mdx`;
+    if (!fs.existsSync(fullPath) && !fs.existsSync(mdxPath)) {
+      delete privateRoutes[route];
+    }
+  }
+
+  return privateRoutes;
+}
+```
+
+Whoa, that's a lot!
+The code is fairly documented so you can follow along easier.
+But the gist of it is:
+- we use `fast-glob` to find all the `_meta.json` files recursively.
+- we iterate over the `_meta.json` files.
+  - in each `_meta.json`, we look over the key-value pairs to construct the route.
+  - in each key-value, we check for the `private` property and resolve its boolean.
+  - while iterating, we keep track of the routes and check if the parent is also private. If the parent is private, the child must be private too. It also inherits the direct parent's roles.
+- after iteration, we do a second pass to clean-up possible invalid routes.
+- we return a map of `private route` as **key** and `roles array` as **value**.
+
+And that's it!
+
+
+### 4.4 Running the script before building
+
+Now that we have our handy-dandy script ready,
+we need to make sure it always gets executed before running our application,
+whether it is being built for production
+or compiling to be running on `localhost`.
+
+To do this, we only need to change our `package.json` file.
+Head over there and change the scripts, like so:
+
+```json
+  "scripts": {
+    "private-route-gen": "ts-node generatePrivateRoutes.ts",
+    "dev": "npm run private-route-gen && next",
+    "prebuild": "npm run private-route-gen",
+    "build": "next build",
+    "start": "next start"
+  },
+```
+
+We've created a `private-route-gen`
+that uses `ts-node` to run our script.
+This newly added script is executed
+when running `pnpm run dev` (running the app locally)
+and `pnpm run build`.
+[We've added it to the `prebuild` script](https://kontent.ai/blog/how-to-run-scripts-before-every-build-on-next-js/)
+so it executes before production builds.
+
+And that's it!
+Now every time you run your application,
+we are sure that the private routes are correctly materialized!
+
+Hurray! 🎉
 
 
 

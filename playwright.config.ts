@@ -6,8 +6,9 @@ import { getMonocartReporterOptions } from "./playwright.monocart-reporter";
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// import dotenv from 'dotenv';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+import dotenv from 'dotenv';
+dotenv.config({ path: "./.env.local" });
+
 
 const _testResultsDir = path.resolve("./e2e-test-results");
 const _codeCoverageDir = path.resolve(_testResultsDir, "code-coverage");

@@ -20,6 +20,7 @@ jobs:
     - name: Run Playwright tests
       run: pnpm exec playwright test
       env:
+        AUTH_SECRET: some_nextauth_secret
         TEST_PASSWORD: password
     - uses: actions/upload-artifact@v4
       if: always()

@@ -5,9 +5,8 @@
     "prebuild": "npm run private-route-gen",
     "build": "next build",
     "start": "next start",
-    "test": "npx playwright test",
-    "test:show-report": "npx monocart show-report ./e2e-test-results/monocart-report.html",
-    "coverage:show-report": "open-cli ./e2e-test-results/code-coverage/v8/index.html"
+    "e2e:test": "npx playwright test",
+    "e2e:test:show-report": "npx monocart show-report ./e2e-test-results/monocart-report.html"
   },
   "dependencies": {
     "next": "^14.2.4",

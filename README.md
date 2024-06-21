@@ -1492,6 +1492,20 @@ we are sure that the private routes are correctly materialized!
 Hurray! 🎉
 
 
+> [!NOTE]
+>
+> You may get an error when building the project saying:
+>
+> ```
+> Error validating _meta.json file for "reference_api" property.
+> Unrecognized key(s) in object: 'private'
+> ```
+>
+> This is expected, since `Nextra` doesn't know what the `private` property is.
+> This doesn't affect the performance of the application,
+> it's simply a warning.
+
+
 
 # Change theme
 

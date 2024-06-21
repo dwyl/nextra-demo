@@ -1,4 +1,5 @@
-import { test, expect } from "@playwright/test";
+// must use this fixture instead of "@playwright/test" to be able to collect data for coverage
+import { test, expect } from "../_shared/app-fixtures";
 
 test.describe("homepage", () => {
   test("is mounted", async ({ page }) => {

@@ -1,4 +1,6 @@
-import { defineConfig, devices } from '@playwright/test';
+import { ReporterDescription, defineConfig, devices } from '@playwright/test';
+import path from "path";
+import { getMonocartReporterOptions } from "./playwright.monocart-reporter";
 
 /**
  * Read environment variables from file.
@@ -6,6 +8,17 @@ import { defineConfig, devices } from '@playwright/test';
  */
 // import dotenv from 'dotenv';
 // dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+const _testResultsDir = path.resolve("./e2e-test-results");
+const _codeCoverageDir = path.resolve(_testResultsDir, "code-coverage");
+let _reporters: ReporterDescription[] = [
+  ["list"],
+  [
+    // See https://github.com/cenfun/monocart-reporter
+    "monocart-reporter",
+    getMonocartReporterOptions(_testResultsDir, _codeCoverageDir),
+  ],
+];
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -21,7 +34,9 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: _reporters,
+  /* See https://playwright.dev/docs/test-global-setup-teardown#option-2-configure-globalsetup-and-globalteardown */
+  globalSetup: require.resolve("./playwright.global-setup.ts"),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -36,8 +51,6 @@ export default defineConfig({
     command: 'pnpm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    stdout: 'ignore',
-    stderr: 'pipe',
     timeout: 120 * 1000,
   },
 

@@ -4,7 +4,10 @@
     "dev": "npm run private-route-gen && next",
     "prebuild": "npm run private-route-gen",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "npx playwright test",
+    "test:show-report": "npx monocart show-report ./e2e-test-results/monocart-report.html",
+    "coverage:show-report": "open-cli ./e2e-test-results/code-coverage/v8/index.html"
   },
   "dependencies": {
     "next": "^14.2.4",
@@ -18,6 +21,8 @@
     "@playwright/test": "^1.44.1",
     "@types/node": "20.14.5",
     "fast-glob": "^3.3.2",
+    "monocart-reporter": "^2.5.0",
+    "open-cli": "^8.0.0",
     "ts-morph": "^22.0.0",
     "ts-node": "^10.9.2",
     "typescript": "5.4.5"

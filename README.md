@@ -744,9 +744,9 @@ and inside this one create a file called `index.ts` (`components/LoginOrUserInfo
 
 ```ts
 import { signOut, signIn } from "next-auth/react";
-import { Session } from "next-auth";
+import { DefaultSession } from "next-auth";
 
-export function LoginOrUserInfo({ session } : Readonly<{session: Session}>) {
+export function LoginOrUserInfo({ session } : Readonly<{session: DefaultSession}>) {
   if (session?.user) {
     return (
       <div>
@@ -1504,6 +1504,8 @@ Hurray! 🎉
 > This is expected, since `Nextra` doesn't know what the `private` property is.
 > This doesn't affect the performance of the application,
 > it's simply a warning.
+
+
 
 
 

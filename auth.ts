@@ -19,9 +19,9 @@ declare module "next-auth" {
      * with the new ones defined above. To keep the default session user properties,
      * we need to add them back into the newly declared interface.
      */
-    user: DefaultSession["user"] & {
+    user: {
       role?: string;
-    };
+    } & DefaultSession["user"];
   }
 
   interface User {

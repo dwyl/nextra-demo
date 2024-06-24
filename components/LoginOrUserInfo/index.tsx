@@ -1,7 +1,7 @@
 import { signOut, signIn } from "next-auth/react";
-import { Session } from "next-auth";
+import { DefaultSession } from "next-auth";
 
-export function LoginOrUserInfo({ session } : Readonly<{session: Session}>) {
+export default function LoginOrUserInfo({ session } : Readonly<{session: DefaultSession}>) {
   if (session?.user) {
     return (
       <div>

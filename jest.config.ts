@@ -13,14 +13,14 @@ const createJestConfig = nextJest({
 
 const config: Config = {
   collectCoverage: true,
-  collectCoverageFrom: ["components/**/*.tsx", "app/**/*.ts", "pages/*"],
+  collectCoverageFrom: ["src/**/*.{js,jsx,ts,tsx}", "!<rootDir>/node_modules/"],
   coverageDirectory: "coverage",
   coveragePathIgnorePatterns: ["/node_modules/"],
   coverageProvider: "v8",
 
   moduleDirectories: ["node_modules"],
   moduleNameMapper: {
-    'next-auth/(.*)': '<rootDir>/node_modules/next-auth/$1'
+    "next-auth/(.*)": "<rootDir>/node_modules/next-auth/$1",
   },
 
   testEnvironment: "jsdom",

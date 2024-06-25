@@ -2,6 +2,26 @@
     "version": "0.2.0",
     "configurations": [
       {
+        "name": "Jest file",
+        "type": "pwa-node",
+        "request": "launch",
+        "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
+        "args": [
+            "${fileBasenameNoExtension}",
+            "--runInBand",
+            "--watch",
+            "--coverage=false",
+            "--no-cache"
+        ],
+        "cwd": "${workspaceRoot}",
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "sourceMaps": true,
+        "windows": {
+            "program": "${workspaceFolder}/node_modules/jest/bin/jest"
+        }
+    },
+      {
         "name": "Next.js: debug server-side",
         "type": "node-terminal",
         "request": "launch",

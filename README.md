@@ -42,6 +42,7 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
       - [4.3.1 Defining `_meta.json` files with `private` properties](#431-defining-_metajson-files-with-private-properties)
       - [4.3.2 Implementing the function](#432-implementing-the-function)
     - [4.4 Running the script before building](#44-running-the-script-before-building)
+  - [5. Moving source files to `src` folder](#5-moving-source-files-to-src-folder)
 - [Change theme](#change-theme)
 - [zones](#zones)
 
@@ -1504,6 +1505,65 @@ Hurray! 🎉
 > This is expected, since `Nextra` doesn't know what the `private` property is.
 > This doesn't affect the performance of the application,
 > it's simply a warning.
+
+
+## 5. Moving source files to `src` folder
+
+Before proceeding, let's do some cleaning up 🧹.
+Right now, we have some source files
+(like `auth.ts`, `middleware.ts`, `generatePrivateRoutes.ts`)
+mixed with several configuration files at root level.
+
+Luckily for us, `Next.js` supports adding a `src` folder
+so we can keep the root directory focused on configuration files
+and the `src` folder to source files.
+
+Let's move our source code to a `src` folder!
+Start by creating it at root level.
+Then, move the following items into it:
+- the `app` folder.
+- the `components` folder.
+- the `pages` folder.
+- `auth.ts`, `middleware.ts` and `generatePrivateRoutes.ts` files.
+
+Now we have to change some imports.
+Check the following changes in each file so everything works again!
+
+```ts
+// src/pages/index.mdx
+import { auth } from "@/src/auth.ts"    // changed from `@/auth.ts`
+import { useData } from 'nextra/data'
+import Link from 'next/link'
+import { signOut } from "next-auth/react"
+import LoginOrUserInfo from "@/src/components/LoginOrUserInfo" // changed from `@/components/LoginOrUserInfo`
+```
+
+```ts
+// src/middleware.ts
+"server only";
+
+import { auth } from "@/src/auth";    // changed from `@/auth.ts`
+import { NextResponse } from "next/server";
+```
+
+```ts
+// tests/unit/LoginOrUserInfo.test.tsx
+import { render, screen } from "@testing-library/react";
+import LoginOrUserInfo from "@/src/components/LoginOrUserInfo";   // changed from `@/components/LoginOrUserInfo`
+import { DefaultSession } from "next-auth";
+import { signOut, signIn } from "next-auth/react";
+```
+
+```json
+// package.json
+"private-route-gen": "ts-node src/generatePrivateRoutes.ts",
+```
+
+And you're sorted!
+We now have all our source files inside `src`,
+the tests inside `tests`,
+and all the configuration files at root level.
+
 
 
 

@@ -1,8 +1,8 @@
-import { auth } from "@/auth.ts"
+import { auth } from "@/src/auth.ts"
 import { useData } from 'nextra/data'
 import Link from 'next/link'
 import { signOut } from "next-auth/react"
-import LoginOrUserInfo from "@/components/LoginOrUserInfo"
+import LoginOrUserInfo from "@/src/components/LoginOrUserInfo"
 
 export async function getServerSideProps(ctx) {
   const session = await auth(ctx)

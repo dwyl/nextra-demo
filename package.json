@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "private-route-gen": "ts-node generatePrivateRoutes.ts",
+    "private-route-gen": "ts-node src/generatePrivateRoutes.ts",
     "dev": "npm run private-route-gen && next",
     "prebuild": "npm run private-route-gen",
     "build": "next build",

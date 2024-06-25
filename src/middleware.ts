@@ -1,6 +1,6 @@
 "server only";
 
-import { auth } from "@/auth";
+import { auth } from "@/src/auth";
 import { NextResponse } from "next/server";
 
 // !!!! DO NOT CHANGE THE NAME OF THE VARIABLE !!!!

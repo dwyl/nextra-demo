@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import LoginOrUserInfo from "@/components/LoginOrUserInfo";
+import LoginOrUserInfo from "@/src/components/LoginOrUserInfo";
 import { DefaultSession } from "next-auth";
 import { signOut, signIn } from "next-auth/react";
 

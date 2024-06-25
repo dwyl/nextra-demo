@@ -24,7 +24,7 @@ type PrivateRoutes = {
  * @param pagesDir path to recursively look for.
  * @returns map of private routes as key and array of roles that are permitted to access the route.
  */
-function getPrivateRoutes(pagesDir: string): PrivateRoutes {
+export function getPrivateRoutes(pagesDir: string): PrivateRoutes {
   let privateRoutes: PrivateRoutes = {};
 
   // Find all _meta.json files recursively
@@ -92,22 +92,28 @@ function getPrivateRoutes(pagesDir: string): PrivateRoutes {
 // - - - - - - - - - - - - - - - - - -  - - - - -
 // `middleware.ts` is changed by executing the code below.
 
-const CONST_VARIABLE_NAME = "privateRoutesMap"; // Name of the constant inside `middleware.ts` to be manipulated
-const DIRECTORY = "pages"; // Directory to look for the routes (should be `pages`, according to Nextra's file system)
+export function changeMiddleware() {
+  const CONST_VARIABLE_NAME = "privateRoutesMap"; // Name of the constant inside `middleware.ts` to be manipulated
+  const DIRECTORY = "pages"; // Directory to look for the routes (should be `pages`, according to Nextra's file system)
+  
+  // Get private routes
+  const pagesDir = path.join(__dirname, DIRECTORY);
+  const privateRoutes = getPrivateRoutes(pagesDir);
+  
+  // Initialize the project and source file
+  const project = new Project();
+  const sourceFile = project.addSourceFileAtPath(path.resolve(__dirname, "middleware.ts"));
+  
+  // Find the variable to replace and change it's declaration
+  const variable = sourceFile.getVariableDeclaration(CONST_VARIABLE_NAME);
+  if (variable) {
+    variable.setInitializer(JSON.stringify(privateRoutes));
+    sourceFile.saveSync();
+  } else {
+    console.error("Variable not found in `middleware.ts`. File wasn't changed.");
+  }  
+}
 
-// Get private routes
-const pagesDir = path.join(__dirname, DIRECTORY);
-const privateRoutes = getPrivateRoutes(pagesDir);
-
-// Initialize the project and source file
-const project = new Project();
-const sourceFile = project.addSourceFileAtPath(path.resolve(__dirname, "middleware.ts"));
-
-// Find the variable to replace and change it's declaration
-const variable = sourceFile.getVariableDeclaration(CONST_VARIABLE_NAME);
-if (variable) {
-  variable.setInitializer(JSON.stringify(privateRoutes));
-  sourceFile.saveSync();
-} else {
-  console.error("Variable not found in `middleware.ts`. File wasn't changed.");
+export default {
+  changeMiddleware: () => changeMiddleware()
 }

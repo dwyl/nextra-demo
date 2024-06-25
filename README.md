@@ -1241,24 +1241,30 @@ import { globSync } from "fast-glob";
 // - - - - - - - - - - - - - - - - - -  - - - - -
 // `middleware.ts` is changed by executing the code below.
 
-const CONST_VARIABLE_NAME = "privateRoutesMap"; // Name of the constant inside `middleware.ts` to be manipulated
-const DIRECTORY = "pages"; // Directory to look for the routes (should be `pages`, according to Nextra's file system)
+export function changeMiddleware() {
+  const CONST_VARIABLE_NAME = "privateRoutesMap"; // Name of the constant inside `middleware.ts` to be manipulated
+  const DIRECTORY = "pages"; // Directory to look for the routes (should be `pages`, according to Nextra's file system)
+  
+  // Get private routes
+  const pagesDir = path.join(__dirname, DIRECTORY);
+  const privateRoutes = getPrivateRoutes(pagesDir);
+  
+  // Initialize the project and source file
+  const project = new Project();
+  const sourceFile = project.addSourceFileAtPath(path.resolve(__dirname, "middleware.ts"));
+  
+  // Find the variable to replace and change it's declaration
+  const variable = sourceFile.getVariableDeclaration(CONST_VARIABLE_NAME);
+  if (variable) {
+    variable.setInitializer(JSON.stringify(privateRoutes));
+    sourceFile.saveSync();
+  } else {
+    console.error("Variable not found in `middleware.ts`. File wasn't changed.");
+  }  
+}
 
-// Get private routes
-const pagesDir = path.join(__dirname, DIRECTORY);
-const privateRoutes = getPrivateRoutes(pagesDir);
-
-// Initialize the project and source file
-const project = new Project();
-const sourceFile = project.addSourceFileAtPath(path.resolve(__dirname, "middleware.ts"));
-
-// Find the variable to replace and change it's declaration
-const variable = sourceFile.getVariableDeclaration(CONST_VARIABLE_NAME);
-if (variable) {
-  variable.setInitializer(JSON.stringify(privateRoutes));
-  sourceFile.saveSync();
-} else {
-  console.error("Variable not found in `middleware.ts`. File wasn't changed.");
+export default {
+  changeMiddleware: () => changeMiddleware()
 }
 ```
 
@@ -1470,7 +1476,7 @@ Head over there and change the scripts, like so:
 
 ```json
   "scripts": {
-    "private-route-gen": "ts-node generatePrivateRoutes.ts",
+    "private-route-gen": "ts-node -e \"import gen from './src/generatePrivateRoutes'; gen.changeMiddleware()\"",
     "dev": "npm run private-route-gen && next",
     "prebuild": "npm run private-route-gen",
     "build": "next build",

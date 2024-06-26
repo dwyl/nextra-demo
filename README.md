@@ -1241,10 +1241,11 @@ import { globSync } from "fast-glob";
 // - - - - - - - - - - - - - - - - - -  - - - - -
 // `middleware.ts` is changed by executing the code below.
 
+const CONST_VARIABLE_NAME = "privateRoutesMap"; // Name of the constant inside `middleware.ts` to be manipulated
+const DIRECTORY = "pages"; // Directory to look for the routes (should be `pages`, according to Nextra's file system)
+
 export function changeMiddleware() {
-  const CONST_VARIABLE_NAME = "privateRoutesMap"; // Name of the constant inside `middleware.ts` to be manipulated
-  const DIRECTORY = "pages"; // Directory to look for the routes (should be `pages`, according to Nextra's file system)
-  
+
   // Get private routes
   const pagesDir = path.join(__dirname, DIRECTORY);
   const privateRoutes = getPrivateRoutes(pagesDir);

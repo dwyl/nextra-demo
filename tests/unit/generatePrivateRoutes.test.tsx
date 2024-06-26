@@ -1,7 +1,8 @@
-import { getPrivateRoutes } from "@/src/generatePrivateRoutes";
+import { changeMiddleware, getPrivateRoutes } from "@/src/generatePrivateRoutes";
 import { globSync } from "fast-glob";
 import { existsSync, readFileSync } from "fs";
 import path, { resolve } from "path";
+import { Project } from "ts-morph";
 
 // Mock path module
 jest.mock("path", () => ({
@@ -9,25 +10,6 @@ jest.mock("path", () => ({
   join: (...args: string[]) => args.join("/"),
   resolve: jest.fn(),
 }));
-
-// Mock ts-morph module
-jest.mock("ts-morph", () => {
-  const actualTsMorph = jest.requireActual("ts-morph");
-
-  class MockSourceFile {
-    getVariableDeclaration = jest.fn();
-    saveSync = jest.fn();
-  }
-
-  class MockProject {
-    addSourceFileAtPath = jest.fn().mockReturnValue(new MockSourceFile());
-  }
-
-  return {
-    ...actualTsMorph,
-    Project: MockProject,
-  };
-});
 
 // Mock fast-glob
 jest.mock("fast-glob", () => ({
@@ -42,7 +24,6 @@ jest.mock("fs", () => {
     readFileSync: jest.fn(),
   };
 });
-
 
 // `jest` hoists the mocked imports. At this point, the functions are mocked, so we redefine them to not throw Typescript `undefined` errors.
 const pathResolveMock = resolve as jest.Mock;
@@ -143,5 +124,58 @@ describe("getPrivateRoutes", () => {
       "pages/dir1/reference_api/mega_private": ["cant_enter"],
       "pages/dir1/reference_api/mega_private/hello": ["cant_enter"],
     });
+  });
+});
+
+const MockGetVariableDeclaration = {
+  setInitializer: jest.fn(),
+};
+
+const MockSourceFile = {
+  getVariableDeclaration: jest
+    .fn()
+    .mockReturnValueOnce(MockGetVariableDeclaration) // first run success
+    .mockReturnValueOnce(false), // second run fails
+  saveSync: jest.fn(),
+};
+
+const MockProject = {
+  addSourceFileAtPath: jest.fn().mockReturnValue(MockSourceFile),
+};
+
+// Mock ts-morph module
+jest.mock("ts-morph", () => {
+  const actualTsMorph = jest.requireActual("ts-morph");
+  return {
+    ...actualTsMorph,
+    Project: jest.fn().mockImplementation(() => {
+      return MockProject;
+    }),
+  };
+});
+
+describe("changeMiddleware", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should successfully change the middleware.ts file with correct private routes (happy path) and fail on the second one (bad path)", () => {
+    // Call the function
+    changeMiddleware();
+
+    // Expectations
+    expect(MockProject.addSourceFileAtPath).toHaveBeenCalled();
+    expect(MockSourceFile.getVariableDeclaration).toHaveBeenCalled();
+    expect(MockSourceFile.saveSync).toHaveBeenCalled();
+    expect(MockGetVariableDeclaration.setInitializer).toHaveBeenCalled();
+
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    // Call the function a second time
+    // It should fail, given how `getVariableDeclaration` is meant to return `false` on second run
+    changeMiddleware();
+
+    // Expectations
+    expect(errorSpy).toHaveBeenCalled();
   });
 });

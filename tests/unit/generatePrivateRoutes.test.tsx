@@ -4,6 +4,9 @@ import { existsSync, readFileSync } from "fs";
 import path, { resolve } from "path";
 import { Project } from "ts-morph";
 
+
+// MOCK AND TEST SUITES FOR `getPrivateRoutes` ----------------------------
+
 // Mock path module
 jest.mock("path", () => ({
   ...jest.requireActual("path"),
@@ -17,56 +20,54 @@ jest.mock("fast-glob", () => ({
 }));
 
 // Mock fs module
-jest.mock("fs", () => {
-  return {
-    realpathSync: jest.fn().mockReturnValue({ native: "" }),
-    existsSync: jest.fn().mockReturnValue(true),
-    readFileSync: jest.fn(),
-  };
-});
+jest.mock("fs", () => ({
+  realpathSync: jest.fn().mockReturnValue({ native: "" }),
+  existsSync: jest.fn().mockReturnValue(true),
+  readFileSync: jest.fn(),
+}));
 
-// `jest` hoists the mocked imports. At this point, the functions are mocked, so we redefine them to not throw Typescript `undefined` errors.
+// Redefine mocks to avoid TypeScript errors
 const pathResolveMock = resolve as jest.Mock;
 const globSyncMock = globSync as jest.Mock;
 const readFileSyncMock = readFileSync as jest.Mock;
 
+// Test suite for getPrivateRoutes function
 describe("getPrivateRoutes", () => {
   it("should return the correct private routes", () => {
     globSyncMock.mockReturnValue(["pages/dir1/_meta.json"]);
     readFileSyncMock.mockReturnValue(`{
-  "index": {
-    "title": "Homepage",
-    "display": "hidden"
-  },
-  "reference_api": {
-    "title": "API Reference",
-    "type": "page",
-    "private": {
-      "private": true,
-      "roles": ["user"]
-    }
-  },
-  "about": {
-    "title": "About Us",
-    "private": true
-  },
-  "contact": {
-    "title": "Contact Us",
-    "type": "page"
-  },
-  "---": {
-    "type": "separator",
-    "private": true
-  },
-  "github_link": {
-    "title": "Github",
-    "href": "https://github.com/shuding/nextra",
-    "newWindow": true,
-    "display": "hidden"
-  }
-}`);
+      "index": {
+        "title": "Homepage",
+        "display": "hidden"
+      },
+      "reference_api": {
+        "title": "API Reference",
+        "type": "page",
+        "private": {
+          "private": true,
+          "roles": ["user"]
+        }
+      },
+      "about": {
+        "title": "About Us",
+        "private": true
+      },
+      "contact": {
+        "title": "Contact Us",
+        "type": "page"
+      },
+      "---": {
+        "type": "separator",
+        "private": true
+      },
+      "github_link": {
+        "title": "Github",
+        "href": "https://github.com/shuding/nextra",
+        "newWindow": true,
+        "display": "hidden"
+      }
+    }`);
     const privateRoutes = getPrivateRoutes(path.join(__dirname, "pages"));
-
     expect(privateRoutes).toEqual({
       "pages/dir1/reference_api": ["user"],
       "pages/dir1/about": [],
@@ -80,43 +81,43 @@ describe("getPrivateRoutes", () => {
       "pages/dir1/reference_api/mega_private/_meta.json",
     ]);
     readFileSyncMock.mockReturnValueOnce(`
-{
-  "reference_api": {
-    "title": "API Reference",
-    "type": "page",
-    "private": {
-      "private": true,
-      "roles": ["user"]
+    {
+      "reference_api": {
+        "title": "API Reference",
+        "type": "page",
+        "private": {
+          "private": true,
+          "roles": ["user"]
+        }
+      }
     }
-  }
-}
-  `).mockReturnValueOnce(`
-{
-  "about": "about",
-  "---": {
-    "type": "separator"
-  },
-  "users": "users",
-  "mega_private": {
-    "title": "Mega Private Section",
-    "private": {
-      "private": true,
-      "roles": ["cant_enter"]
+    `)
+    .mockReturnValueOnce(`
+    {
+      "about": "about",
+      "---": {
+        "type": "separator"
+      },
+      "users": "users",
+      "mega_private": {
+        "title": "Mega Private Section",
+        "private": {
+          "private": true,
+          "roles": ["cant_enter"]
+        }
+      }
     }
-  }
-}
-`).mockReturnValueOnce(`
-{
-    "hello": "Hello page"
-}
-`);
+    `).mockReturnValueOnce(`
+    {
+      "hello": "Hello page"
+    }
+    `);
     pathResolveMock.mockImplementation((path: string, second: string) => {
       const index = path.lastIndexOf("/");
       return path.substring(0, index);
-    }); // assumes the "resolve" will be called with (dir, "..")
+    });
 
     const privateRoutes = getPrivateRoutes(path.join(__dirname, "pages"));
-
     expect(privateRoutes).toEqual({
       "pages/dir1/reference_api": ["user"],
       "pages/dir1/reference_api/about": ["user"],
@@ -127,18 +128,20 @@ describe("getPrivateRoutes", () => {
   });
 });
 
+
+// MOCK AND TEST SUITES FOR `changeMiddleware` ----------------------------
+
+// Mock objects for ts-morph
 const MockGetVariableDeclaration = {
   setInitializer: jest.fn(),
 };
-
 const MockSourceFile = {
   getVariableDeclaration: jest
     .fn()
-    .mockReturnValueOnce(MockGetVariableDeclaration) // first run success
-    .mockReturnValueOnce(false), // second run fails
+    .mockReturnValueOnce(MockGetVariableDeclaration)
+    .mockReturnValueOnce(false),
   saveSync: jest.fn(),
 };
-
 const MockProject = {
   addSourceFileAtPath: jest.fn().mockReturnValue(MockSourceFile),
 };
@@ -154,6 +157,7 @@ jest.mock("ts-morph", () => {
   };
 });
 
+// Test suite for changeMiddleware function
 describe("changeMiddleware", () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -172,7 +176,6 @@ describe("changeMiddleware", () => {
     const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 
     // Call the function a second time
-    // It should fail, given how `getVariableDeclaration` is meant to return `false` on second run
     changeMiddleware();
 
     // Expectations

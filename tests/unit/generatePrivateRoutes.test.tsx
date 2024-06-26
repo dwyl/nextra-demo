@@ -56,7 +56,9 @@ describe("getPrivateRoutes", () => {
       },
       "contact": {
         "title": "Contact Us",
-        "type": "page"
+        "private": {
+          "private": true
+        }
       },
       "---": {
         "type": "separator",
@@ -77,6 +79,7 @@ describe("getPrivateRoutes", () => {
     expect(privateRoutes).toEqual({
       "pages/dir1/reference_api": ["user"],
       "pages/dir1/about": [],
+      "pages/dir1/contact": [],
     });
   });
 

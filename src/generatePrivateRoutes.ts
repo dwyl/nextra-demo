@@ -116,5 +116,6 @@ export function changeMiddleware() {
 }
 
 export default {
+  /* c8 ignore next */
   changeMiddleware: () => changeMiddleware()
 }

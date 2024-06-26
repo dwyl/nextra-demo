@@ -22,7 +22,7 @@ jest.mock("fast-glob", () => ({
 // Mock fs module
 jest.mock("fs", () => ({
   realpathSync: jest.fn().mockReturnValue({ native: "" }),
-  existsSync: jest.fn().mockReturnValue(true),
+  existsSync: jest.fn(),
   readFileSync: jest.fn(),
 }));
 
@@ -30,11 +30,13 @@ jest.mock("fs", () => ({
 const pathResolveMock = resolve as jest.Mock;
 const globSyncMock = globSync as jest.Mock;
 const readFileSyncMock = readFileSync as jest.Mock;
+const existsSyncMock = existsSync as jest.Mock;
 
 // Test suite for getPrivateRoutes function
 describe("getPrivateRoutes", () => {
   it("should return the correct private routes", () => {
     globSyncMock.mockReturnValue(["pages/dir1/_meta.json"]);
+    existsSyncMock.mockReturnValue(true);
     readFileSyncMock.mockReturnValue(`{
       "index": {
         "title": "Homepage",
@@ -67,7 +69,11 @@ describe("getPrivateRoutes", () => {
         "display": "hidden"
       }
     }`);
+
+    // Call function
     const privateRoutes = getPrivateRoutes(path.join(__dirname, "pages"));
+
+    // Expectation
     expect(privateRoutes).toEqual({
       "pages/dir1/reference_api": ["user"],
       "pages/dir1/about": [],
@@ -80,6 +86,7 @@ describe("getPrivateRoutes", () => {
       "pages/dir1/reference_api/_meta.json",
       "pages/dir1/reference_api/mega_private/_meta.json",
     ]);
+    existsSyncMock.mockReturnValue(true);
     readFileSyncMock.mockReturnValueOnce(`
     {
       "reference_api": {
@@ -117,7 +124,10 @@ describe("getPrivateRoutes", () => {
       return path.substring(0, index);
     });
 
+    // Call function
     const privateRoutes = getPrivateRoutes(path.join(__dirname, "pages"));
+
+    // Expectations
     expect(privateRoutes).toEqual({
       "pages/dir1/reference_api": ["user"],
       "pages/dir1/reference_api/about": ["user"],
@@ -125,6 +135,31 @@ describe("getPrivateRoutes", () => {
       "pages/dir1/reference_api/mega_private": ["cant_enter"],
       "pages/dir1/reference_api/mega_private/hello": ["cant_enter"],
     });
+  });
+
+  it("should return the correct private routes but deleting the ones which don't exist in the file system", () => {
+    globSyncMock.mockReturnValue(["pages/dir1/_meta.json"]);
+    existsSyncMock.mockReturnValue(false);
+    readFileSyncMock.mockReturnValue(`{
+      "reference_api": {
+        "title": "API Reference",
+        "type": "page",
+        "private": {
+          "private": true,
+          "roles": ["user"]
+        }
+      },
+      "about": {
+        "title": "About Us",
+        "private": true
+      }
+    }`);
+
+    // Call function
+    const privateRoutes = getPrivateRoutes(path.join(__dirname, "pages"));
+
+    // Expectations
+    expect(privateRoutes).toEqual({});
   });
 });
 

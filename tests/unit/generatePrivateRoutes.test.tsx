@@ -1,12 +1,13 @@
 import { getPrivateRoutes } from "@/src/generatePrivateRoutes";
-import { readFileSync } from "fs";
-import path from "path";
+import { globSync } from "fast-glob";
+import { existsSync, readFileSync } from "fs";
+import path, { resolve } from "path";
 
 // Mock path module
 jest.mock("path", () => ({
   ...jest.requireActual("path"),
   join: (...args: string[]) => args.join("/"),
-  resolve: (...args: string[]) => args.join("/"),
+  resolve: jest.fn(),
 }));
 
 // Mock ts-morph module
@@ -30,19 +31,28 @@ jest.mock("ts-morph", () => {
 
 // Mock fast-glob
 jest.mock("fast-glob", () => ({
-  globSync: jest.fn(() => ["pages/dir1/_meta.json"]),
+  globSync: jest.fn(),
 }));
 
 // Mock fs module
 jest.mock("fs", () => {
-  const actualFs = jest.requireActual("fs");
-
-  // Mock realpathSync and realpathSync.native
   return {
-    ...actualFs,
     realpathSync: jest.fn().mockReturnValue({ native: "" }),
     existsSync: jest.fn().mockReturnValue(true),
-    readFileSync: jest.fn().mockReturnValue(`{
+    readFileSync: jest.fn(),
+  };
+});
+
+
+// `jest` hoists the mocked imports. At this point, the functions are mocked, so we redefine them to not throw Typescript `undefined` errors.
+const pathResolveMock = resolve as jest.Mock;
+const globSyncMock = globSync as jest.Mock;
+const readFileSyncMock = readFileSync as jest.Mock;
+
+describe("getPrivateRoutes", () => {
+  it("should return the correct private routes", () => {
+    globSyncMock.mockReturnValue(["pages/dir1/_meta.json"]);
+    readFileSyncMock.mockReturnValue(`{
   "index": {
     "title": "Homepage",
     "display": "hidden"
@@ -73,22 +83,65 @@ jest.mock("fs", () => {
     "newWindow": true,
     "display": "hidden"
   }
-}
-`),
-  };
-});
-
-describe("getPrivateRoutes", () => {
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it("should return the correct private routes", () => {
+}`);
     const privateRoutes = getPrivateRoutes(path.join(__dirname, "pages"));
 
     expect(privateRoutes).toEqual({
       "pages/dir1/reference_api": ["user"],
       "pages/dir1/about": [],
+    });
+  });
+
+  it("should return the correct nested private routes", () => {
+    globSyncMock.mockReturnValue([
+      "pages/dir1/_meta.json",
+      "pages/dir1/reference_api/_meta.json",
+      "pages/dir1/reference_api/mega_private/_meta.json",
+    ]);
+    readFileSyncMock.mockReturnValueOnce(`
+{
+  "reference_api": {
+    "title": "API Reference",
+    "type": "page",
+    "private": {
+      "private": true,
+      "roles": ["user"]
+    }
+  }
+}
+  `).mockReturnValueOnce(`
+{
+  "about": "about",
+  "---": {
+    "type": "separator"
+  },
+  "users": "users",
+  "mega_private": {
+    "title": "Mega Private Section",
+    "private": {
+      "private": true,
+      "roles": ["cant_enter"]
+    }
+  }
+}
+`).mockReturnValueOnce(`
+{
+    "hello": "Hello page"
+}
+`);
+    pathResolveMock.mockImplementation((path: string, second: string) => {
+      const index = path.lastIndexOf("/");
+      return path.substring(0, index);
+    }); // assumes the "resolve" will be called with (dir, "..")
+
+    const privateRoutes = getPrivateRoutes(path.join(__dirname, "pages"));
+
+    expect(privateRoutes).toEqual({
+      "pages/dir1/reference_api": ["user"],
+      "pages/dir1/reference_api/about": ["user"],
+      "pages/dir1/reference_api/users": ["user"],
+      "pages/dir1/reference_api/mega_private": ["cant_enter"],
+      "pages/dir1/reference_api/mega_private/hello": ["cant_enter"],
     });
   });
 });

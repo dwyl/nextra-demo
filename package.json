@@ -7,7 +7,7 @@
     "start": "next start",
     "e2e:test": "npx playwright test",
     "e2e:test:show-report": "npx monocart show-report ./e2e-test-results/monocart-report.html",
-    "test": "jest"
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "next-auth": "5.0.0-beta.19",

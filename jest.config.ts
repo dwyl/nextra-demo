@@ -18,7 +18,16 @@ const config: Config = {
   coveragePathIgnorePatterns: ["/node_modules/"],
   coverageProvider: "v8",
 
-  moduleDirectories: ["node_modules"],
+  moduleDirectories: [
+    "node_modules"
+  ],
+  modulePathIgnorePatterns: [
+    // Testing auth with `next-auth` complains (consider switching to Vitest)
+    // Doesn't seem to have a proper solution. See https://github.com/nextauthjs/next-auth/issues/4198.
+    "src/auth.ts",
+    "src/middleware.ts",
+    "src/app"
+  ],
   moduleNameMapper: {
     "next-auth/(.*)": "<rootDir>/node_modules/next-auth/$1",
   },

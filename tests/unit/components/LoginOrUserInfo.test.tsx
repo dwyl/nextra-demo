@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import LoginOrUserInfo from "@/src/components/LoginOrUserInfo";
 import { DefaultSession } from "next-auth";
+import { fireEvent } from "@testing-library/react";
 import { signOut, signIn } from "next-auth/react";
 
 // Mocking `signIn` and `signOut` API calls
@@ -18,11 +19,13 @@ describe("LoginOrUserInfo", () => {
     };
 
     render(<LoginOrUserInfo session={session} />);
-    expect(screen.getByRole("button", { name: "SIGN IN" })).toBeDefined();
+    const button = screen.getByRole("button", { name: "SIGN IN" });
+    button.click();
+    expect(button).toBeDefined();
   });
 
   it('shows "Sign Out" button and user info when session is found', () => {
-    const username = "AlpheyaUsername"
+    const username = "AlpheyaUsername";
     const session: DefaultSession = {
       user: {
         name: username,
@@ -31,7 +34,9 @@ describe("LoginOrUserInfo", () => {
     };
 
     render(<LoginOrUserInfo session={session} />);
-    expect(screen.getByRole("button", { name: "SIGN OUT" })).toBeDefined();
+    const button = screen.getByRole("button", { name: "SIGN OUT" });
+    button.click();
+    expect(button).toBeDefined();
     expect(screen.getByText(username)).toBeDefined();
   });
 });

@@ -43,8 +43,9 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
       - [4.3.2 Implementing the function](#432-implementing-the-function)
     - [4.4 Running the script before building](#44-running-the-script-before-building)
   - [5. Moving source files to `src` folder](#5-moving-source-files-to-src-folder)
+  - [6.](#6)
 - [Change theme](#change-theme)
-- [zones](#zones)
+- [zones (basicamente ter uma home page para ir aos docs e depois ter o signin noutro url)](#zones-basicamente-ter-uma-home-page-para-ir-aos-docs-e-depois-ter-o-signin-noutro-url)
 
 
 # Why?
@@ -1572,6 +1573,9 @@ the tests inside `tests`,
 and all the configuration files at root level.
 
 
+## 6. 
+
+
 
 
 
@@ -1581,5 +1585,5 @@ and all the configuration files at root level.
 - custom theme is the only option
 - although yuyou can change some aspects of the sidebar (https://nextra.site/docs/docs-theme/theme-configuration#customize-sidebar-content), you can't do it on the navbar (https://github.com/shuding/nextra/discussions/2799). Either way, the way Nextra does it doesn't allow us to have access to the authorization and change the display accordingly. We need to go deeper.
 
-# zones 
+# zones (basicamente ter uma home page para ir aos docs e depois ter o signin noutro url)
 https://github.com/shuding/nextra/discussions/93

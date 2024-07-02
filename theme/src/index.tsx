@@ -17,7 +17,7 @@ import {
   Sidebar,
   SkipNavContent
 } from './components'
-import { DEFAULT_LOCALE, PartialDocsThemeConfig } from './constants'
+import { DEFAULT_LOCALE, PartialDocsThemeConfig } from './contexts/config'
 import { ActiveAnchorProvider, ConfigProvider, useConfig } from './contexts'
 import { getComponents } from './mdx-components'
 import { renderComponent } from './utils'

@@ -1,4 +1,4 @@
-import { IS_BROWSER } from './constants'
+import { IS_BROWSER } from './contexts/config'
 
 if (IS_BROWSER) {
   let resizeTimer: any

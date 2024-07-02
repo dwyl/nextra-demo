@@ -1,12 +1,8 @@
-import { ThemeProvider } from 'next-themes'
-import type { FrontMatter, PageMapItem, PageOpts } from 'nextra'
-import { metaSchema } from 'nextra/normalize-pages'
-import type { ReactElement } from 'react'
-import { createContext, useContext, useState } from 'react'
-import type { ZodError } from 'zod'
-import type { Context } from '../types'
-import { MenuProvider } from './menu'
-
+/** 
+ * This is copied from the original `constants.ts` file in `theme/src`.
+ * The reason it is copied here is because it didn't work right from the Nextra's original source code,
+ * because a `⨯ ReferenceError: Cannot access 'DEFAULT_THEME' before initialization` was raised.
+ */
 /* eslint sort-keys: error */
 import type { NextSeoProps } from 'next-seo'
 import { useRouter } from 'next/router'
@@ -375,6 +371,19 @@ const DEEP_OBJECT_KEYS = Object.entries(DEFAULT_THEME)
   })
   .filter(Boolean)
 
+  /**
+   * Copied code from `constants.ts` ends here. --------
+   */
+
+
+  import { ThemeProvider } from 'next-themes'
+  import type { FrontMatter, PageMapItem, PageOpts } from 'nextra'
+  import { metaSchema } from 'nextra/normalize-pages'
+  import type { ReactElement } from 'react'
+  import { createContext, useContext, useState } from 'react'
+  import type { ZodError } from 'zod'
+  import type { Context } from '../types'
+  import { MenuProvider } from './menu'
 
 type Config<FrontMatterType = FrontMatter> = DocsThemeConfig &
   Pick<

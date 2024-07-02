@@ -251,7 +251,7 @@ export default function Layout({
   )
 }
 
-export { useConfig, PartialDocsThemeConfig as DocsThemeConfig }
+export { useConfig, type PartialDocsThemeConfig as DocsThemeConfig }
 export { useMDXComponents } from 'nextra/mdx'
 export {
   Callout,

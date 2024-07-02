@@ -177,7 +177,7 @@ export function Search({
           : mounted &&
             (navigator.userAgent.includes('Macintosh') ? (
               <>
-                <span className="nx-text-xs">⌘</span>
+                <span className="nx-text-xs">⌘</span>K
               </>
             ) : (
               'CTRL K'

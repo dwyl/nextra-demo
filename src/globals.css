@@ -1,4 +1,2 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Use the theme's styless CSS file */
 @import "../theme/css/styles.css"

@@ -6,7 +6,7 @@ import { Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
 
 // We need to add the role to the JWT inside `NextAuth` below, so the `middleware.ts` can have access to it.
-// The problem is that it wasn't added this `role` custom field, even if we defined it in `auth.ts`.
+// The problem is that it wasn't adding this `role` custom field, even if we defined it in `auth.ts`.
 // Apparently, the problem is with the types of `next-auth`, which we need to redefine.
 // See https://stackoverflow.com/questions/74425533/property-role-does-not-exist-on-type-user-adapteruser-in-nextauth
 // and see https://authjs.dev/getting-started/typescript#module-augmentation.

@@ -30,3 +30,11 @@ which in turn needed `constants.tsx`,
 thus creating a `⨯ ReferenceError: Cannot access 'DEFAULT_THEME' before initialization` error.
 
 The copied section is made explicit inside [`src/contexts/config.tsx`](./src/contexts/config.tsx).
+
+
+### A note about `tailwind.config.js` and `postcss.config.js`
+
+Another difference that the files `tailwind.config.js` and `postcss.config.js`
+are not found in this directory.
+Instead, they are **at the project's root level**.
+This is so `TailwindCSS` from the project uses the theme's.

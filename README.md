@@ -54,6 +54,7 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
     - [7.4 Rendering links inside `sidebar`](#74-rendering-links-inside-sidebar)
       - [7.4.1 Understanding how directory items are passed down to the `sidebar`](#741-understanding-how-directory-items-are-passed-down-to-the-sidebar)
       - [7.4.2 Conditionally rendering links in `Menu` inside the `sidebar`](#742-conditionally-rendering-links-in-menu-inside-the-sidebar)
+  - [_Please_ star the repo! ⭐️](#please-star-the-repo-️)
 - [Change theme](#change-theme)
 - [zones (basicamente ter uma home page para ir aos docs e depois ter o signin noutro url)](#zones-basicamente-ter-uma-home-page-para-ir-aos-docs-e-depois-ter-o-signin-noutro-url)
 
@@ -2423,6 +2424,13 @@ which is different to what this directory requires.
 
 Great job! 🎉
 
+
+## _Please_ star the repo! ⭐️
+
+If you find this package/repo useful,
+please star it on GitHub, so that we know! ⭐
+
+Thank you! 🙏
 
 
 

@@ -1598,13 +1598,16 @@ where we check [each sidebar title and hide it](https://nextra.site/docs/docs-th
 and [override the whole navbar](https://nextra.site/docs/docs-theme/theme-configuration#customize-the-navbar).
 
 2. use the code from the [`nextra-theme-docs`](https://github.com/shuding/nextra/tree/main/packages/nextra-theme-docs)
-to keep the default theme, use it as a `custom-theme` in `theme.config.jsx` 
+to keep the default theme, use it as a `custom-theme` in `theme.config.jsx`
 and try to conditionally render each link according to the person's role.
 
 Although you can go with `Option 1` for simplicity sake,
-we are going with `Option 2` for two main reasons:
-we want to keep the same look n' feel of the application as it stands
-*and* we don't want to re-implement and waste the time trying to do so.
+we are going with `Option 2` for three main reasons:
+
+- we want to keep the same look n' feel of the application as it stands.
+- we don't want to re-implement and waste the time trying to do so.
+- we want to have access to the `private` property we've defined inside `_meta.json` files,
+which can only be made through augmenting the types of the `nextra-docs-theme` source code.
 
 With this in mind, let's do this!
 

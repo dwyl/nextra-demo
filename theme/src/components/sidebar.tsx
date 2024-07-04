@@ -20,6 +20,9 @@ import { renderComponent } from '../utils'
 import { Anchor } from './anchor'
 import { Collapse } from './collapse'
 import { LocaleSwitch } from './locale-switch'
+import { ExtendedItem, ExtendedPageItem } from '../types'
+import { useSession } from 'next-auth/react'
+import { shouldLinkBeRenderedAccordingToUserRole } from '../utils/render';
 
 const TreeState: Record<string, boolean> = Object.create(null)
 
@@ -292,7 +295,7 @@ function File({
 }
 
 interface MenuProps {
-  directories: PageItem[] | Item[]
+  directories: ExtendedPageItem[] | ExtendedItem[]
   anchors: Heading[]
   base?: string
   className?: string
@@ -305,10 +308,17 @@ function Menu({
   className,
   onlyCurrentDocs
 }: MenuProps): ReactElement {
+
+  const session = useSession()
+
   return (
     <ul className={cn(classes.list, className)}>
-      {directories.map(item =>
-        !onlyCurrentDocs || item.isUnderCurrentDocsTree ? (
+      {directories.map(item => {
+
+        if(!shouldLinkBeRenderedAccordingToUserRole(session, item)) 
+          return null
+
+        return         !onlyCurrentDocs || item.isUnderCurrentDocsTree ? (
           item.type === 'menu' ||
           (item.children && (item.children.length || !item.withIndexPage)) ? (
             <Folder key={item.name} item={item} anchors={anchors} />
@@ -316,15 +326,17 @@ function Menu({
             <File key={item.name} item={item} anchors={anchors} />
           )
         ) : null
+      }
+
       )}
     </ul>
   )
 }
 
 interface SideBarProps {
-  docsDirectories: PageItem[]
-  flatDirectories: Item[]
-  fullDirectories: Item[]
+  docsDirectories: ExtendedPageItem[]   // they have the `private` property
+  flatDirectories: ExtendedItem[]       // they DON'T have the `private` property (used for search)
+  fullDirectories: ExtendedItem[]       // they have the `private` property
   asPopover?: boolean
   headings: Heading[]
   includePlaceholder: boolean

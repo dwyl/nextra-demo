@@ -2,7 +2,7 @@
 import type { PageOpts } from 'nextra'
 import type { ReactNode } from 'react'
 import type { DocsThemeConfig } from './contexts/config'
-import type { MenuItem, PageItem } from 'nextra/normalize-pages'
+import type { Item, MenuItem, PageItem } from 'nextra/normalize-pages'
 import { PrivateInfo } from '../../src/types';
 
 export type Context = {
@@ -20,3 +20,4 @@ export type SearchResult = {
 // Extends the PageItem and MenuItem with the `private` property
 export type ExtendedPageItem = { private?: PrivateInfo } & PageItem;
 export type ExtendedMenuItem = { private?: PrivateInfo } & MenuItem;
+export type ExtendedItem = { private?: PrivateInfo } & Item;

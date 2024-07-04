@@ -98,7 +98,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // But because Github's provider is not passing the role
       // (it should, according to https://authjs.dev/guides/role-based-access-control#with-jwt -
       // maybe it's because v5 is still in beta), we're just gonna append it every time
-      return { ...token, role: "another_role" };
+      return { ...token, role: "user" };
     },
     session({ session, token }) {
       session.user.role = token.role

@@ -43,7 +43,14 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
       - [4.3.2 Implementing the function](#432-implementing-the-function)
     - [4.4 Running the script before building](#44-running-the-script-before-building)
   - [5. Moving source files to `src` folder](#5-moving-source-files-to-src-folder)
-  - [6.](#6)
+  - [6. Adding custom theme](#6-adding-custom-theme)
+    - [6.1 Copying the `nextra-theme-docs`](#61-copying-the-nextra-theme-docs)
+    - [6.2 Installing `TailwindCSS` and setting up `pnpm` workspace](#62-installing-tailwindcss-and-setting-up-pnpm-workspace)
+    - [6.3 Using `TailwindCSS` globally](#63-using-tailwindcss-globally)
+  - [7. Conditional rendering on components](#7-conditional-rendering-on-components)
+    - [7.1 With which methods can we do this?](#71-with-which-methods-can-we-do-this)
+    - [7.2 Using `useSession()`](#72-using-usesession)
+    - [7.3 Rendering links inside `navbar`](#73-rendering-links-inside-navbar)
 - [Change theme](#change-theme)
 - [zones (basicamente ter uma home page para ir aos docs e depois ter o signin noutro url)](#zones-basicamente-ter-uma-home-page-para-ir-aos-docs-e-depois-ter-o-signin-noutro-url)
 
@@ -1573,7 +1580,592 @@ the tests inside `tests`,
 and all the configuration files at root level.
 
 
-## 6. 
+## 6. Adding custom theme
+
+Now that we've protected some routes through the `middleware.ts` file,
+we need to go a bit further.
+It doesn't make sense for public people to see the private routes,
+either be it on the **sidebar** or on the **navbar**.
+
+For this, we can go about this with two options:
+
+1. we **customize the default theme** through `theme.config.jsx` (https://nextra.site/docs/docs-theme/theme-configuration#customize-the-navbar),
+where we check [each sidebar title and hide it](https://nextra.site/docs/docs-theme/theme-configuration#docs-repository)
+and [override the whole navbar](https://nextra.site/docs/docs-theme/theme-configuration#customize-the-navbar).
+
+2. use the code from the [`nextra-theme-docs`](https://github.com/shuding/nextra/tree/main/packages/nextra-theme-docs)
+to keep the default theme, use it as a `custom-theme` in `theme.config.jsx` 
+and try to conditionally render each link according to the person's role.
+
+Although you can go with `Option 1` for simplicity sake,
+we are going with `Option 2` for two main reasons:
+we want to keep the same look n' feel of the application as it stands
+*and* we don't want to re-implement and waste the time trying to do so.
+
+With this in mind, let's do this!
+
+
+### 6.1 Copying the `nextra-theme-docs`
+
+
+Download the directory from https://github.com/dwyl/nextra-demo/tree/34a6327e00b941b50dffdbbed99ab6bf294511a4/theme.
+This directory is a version of [`nextra-theme-docs`](https://github.com/shuding/nextra/tree/main/packages/nextra-theme-docs)
+**with a few modifications** (they are explained in the `README.md` inside the directory).
+
+Long story short, the differences are:
+- we've imported some [`nextra` components](https://github.com/shuding/nextra/tree/main/packages/nextra/src/components)
+from the original package and placed it inside the theme.
+- moved some code from `src/constants.tsx` to `src/contexts/config.tsx`.
+This is because, as is, the code threw a
+`ReferenceError: Cannot access 'DEFAULT_THEME' before initialization` error.
+- removed `tailwind.config.js` and `postcss.config.js`.
+We'll be using these on the **root of the project** instead.
+
+After downloading this directory,
+put all of the downloaded code inside a new directory called `theme`.
+
+
+### 6.2 Installing `TailwindCSS` and setting up `pnpm` workspace
+
+For this to work,
+we'll have to install `TailwindCSS` on our project.
+This is what the custom theme depends on to properly render their components.
+
+For this, open the terminal and type `pnpm install tailwindcss postcss autoprefixer`.
+
+Next up, let's create two files:
+`tailwind.config.js` and `postcss.config.js`.
+These two files are from the original theme.
+
+```js
+// tailwind.config.js
+
+const colors = require('tailwindcss/colors')
+
+const makePrimaryColor =
+  l =>
+  ({ opacityValue }) => {
+    return (
+      `hsl(var(--nextra-primary-hue) var(--nextra-primary-saturation) ${l}%` +
+      (opacityValue ? ` / ${opacityValue})` : ')')
+    )
+  }
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  prefix: 'nx-',
+  content: [
+    './theme/src/**/*.tsx',
+    './theme/src/nextra_icons/*.tsx',
+    './theme/src/nextra_components/*.tsx'
+  ],
+  theme: {
+    screens: {
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+      '2xl': '1536px'
+    },
+    fontSize: {
+      xs: '.75rem',
+      sm: '.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+      '2xl': '1.5rem',
+      '3xl': '1.875rem',
+      '4xl': '2.25rem',
+      '5xl': '3rem',
+      '6xl': '4rem'
+    },
+    letterSpacing: {
+      tight: '-0.015em'
+    },
+    colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      black: '#000',
+      white: '#fff',
+      gray: colors.gray,
+      slate: colors.slate,
+      neutral: colors.neutral,
+      red: colors.red,
+      orange: colors.orange,
+      blue: colors.blue,
+      yellow: colors.yellow,
+      primary: {
+        50: makePrimaryColor(97),
+        100: makePrimaryColor(94),
+        200: makePrimaryColor(86),
+        300: makePrimaryColor(77),
+        400: makePrimaryColor(66),
+        500: makePrimaryColor(50),
+        600: makePrimaryColor(45),
+        700: makePrimaryColor(39),
+        750: makePrimaryColor(35),
+        800: makePrimaryColor(32),
+        900: makePrimaryColor(24)
+      }
+    },
+    extend: {
+      colors: {
+        dark: '#111'
+      }
+    }
+  },
+  darkMode: ['class', 'html[class~="dark"]']
+}
+```
+
+```js
+// postcss.config.js
+/** @type {import('postcss').Postcss} */
+module.exports = {
+  plugins: {
+    'postcss-import': {},
+    'tailwindcss/nesting': {},
+    tailwindcss: {},
+    'postcss-lightningcss': {
+      browsers: '>= .25%'
+    }
+  }
+}
+```
+
+And that's it for the `TailwindCSS` part of things!
+Now, because our `theme` directory has its own set of dependencies,
+we need to tell our root project that information!
+We want it to install and use its dependencies.
+For this, we leverage [**`pnpm` Workspaces**](https://pnpm.io/workspaces)
+to install and update dependencies in a single `pnpm install` command!
+
+For this, we have to:
+- give our root project's workspace a name.
+We can do this by going to `package.json` and adding the line
+`"name": "nextra"` on top.
+- create a `pnpm-workspace.yaml` file.
+
+```yaml
+packages:
+  - '.'
+  - 'theme'
+```
+
+
+### 6.3 Using `TailwindCSS` globally
+
+Now that we've installed `TailwindCSS`,
+let's *use it* in our application!
+
+For our theme to work, we need to create a `.css` file
+and import it in our `Pages Router` so it is used throughout our application pages.
+To do this,
+create a file inside `src` - `src/globals.css`.
+
+```css
+/* Use the theme's styles CSS file */
+@import "../theme/css/styles.css"
+```
+
+Easy enough, right?
+We are simply using the `theme`'s styles in our own application's styles!
+Now we just need *to use it in our application*.
+To do this,
+we are going to be using a [**custom app component**](https://nextjs.org/docs/pages/building-your-application/routing/custom-app),
+which is called to initialize pages.
+We are going to override it to inject our styles.
+
+Inside `src/pages`, create a file called `_app.tsx`.
+
+```tsx
+// These styles apply to every route in the application
+import '@/src/globals.css'
+import type { AppProps } from 'next/app'
+ 
+export default function App({ Component, pageProps }: AppProps) {
+  return <Component {...pageProps} />
+}
+```
+
+And that's it!
+
+The *very last thing we need to do*,
+is to **tell `Nextra` we want to use our custom theme**.
+For this, simply head over to `next.config.js`
+and change the `theme` property
+to the directory of our newly created `theme` directory.
+
+```js
+const withNextra = require("nextra")({
+  theme: "./theme/src/index.tsx",      // change here
+  themeConfig: "./theme.config.jsx",
+  defaultShowCopyCode: true
+});
+
+module.exports = withNextra();
+```
+
+If you run `pnpm run dev`, you should be able to see the application running as before!
+
+
+## 7. Conditional rendering on components
+
+Now that we have our custom theme properly setup and added to our application,
+we now have the opportunity to do whatever we want with the components.
+In our case, it is *extremely useful*
+to **conditionally render links of protected routes according to the logged user**.
+
+
+### 7.1 With which methods can we do this?
+
+`auth.js` provides us a few ways of authenticating people
+and getting their session.
+`Next.js` is moving to a `server-side`-first approach
+with their *`app router`*
+with [the introduction of `Server Components`](https://nextjs.org/docs/app/building-your-application/rendering/server-components).
+So this should be our approach.
+
+*However*, `Nextra` does [**not yet support `app router`**](https://github.com/shuding/nextra/issues/2023).
+This makes it so that the statically rendered pages are **client components**.
+If we take a look at [`auth.js`'s documentation](https://authjs.dev/getting-started/migrating-to-v5#authenticating-server-side),
+we quickly realise that we can't use the `auth()` call like we did in `src/middleware.ts`
+inside our theme's components.
+In fact, we can only use [`useSession()`](https://next-auth.js.org/getting-started/client#usesession)
+to fetch the current session of the logged in person.
+
+> [!NOTE]
+>
+> We *did try* using the `auth()` call,
+> but we were always prompted with the same error:
+> ```
+> unhandledRejection: Error: `headers` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+> ```
+> Reading the link in the error,
+> this happens because calling `headers()` is made within the library,
+> which *is out of the scope of the theme*, making it impossible to do it "server-side".
+>
+> Even after [updating the `handlers` inside `app/api/auth/[...nextauth]/route.ts`](https://github.com/vercel/next.js/issues/50679#issuecomment-1573705463)
+> and simply overriding the default theme through `theme.config.jsx`,
+> the same error occurred.
+
+While this may seem not like the ideal scenario,
+it's important to stress **that the routes are still protected**
+and that the issued [`JWT` are encrypted by default.](https://authjs.dev/reference/core/jwt).
+So, while very unlikely, the person may *know some links exist*,
+but they can't access it,
+as they are protected server-side through `middleware.ts`.
+
+
+### 7.2 Using `useSession()`
+
+Now that we know we're using the `useSession()` hook to retrieve the person's current session,
+let's make some changes to our code so we can use it!
+
+The first thing we need to do
+is to wrap our app with [`<SessionProvider>`](https://next-auth.js.org/getting-started/client#sessionprovider).
+This will ensure the session is accessible throughout the application.
+
+Head over to `src/pages/_app.tsx`,
+and change it to the following.
+
+```ts
+// These styles apply to every route in the application
+import '@/src/globals.css'
+import type { AppProps } from 'next/app'
+import { SessionProvider } from "next-auth/react"
+
+export default function MyApp({
+  Component,
+  pageProps: { session, ...pageProps },
+}: AppProps) {
+  return (
+    <SessionProvider session={session}>
+      <Component {...pageProps} />;
+    </SessionProvider>
+  )
+}
+```
+
+Awesome!
+
+Before proceeding, let's do some housekeeping 🧹.
+We *know* we are going to need two things:
+- use the extended `User` interface
+that we augmented inside `auth`.
+- use the `PrivateInfo` type inside `src/generatePrivateRoutes.ts`
+to know whether a menu item is private or not.
+
+Let's start with the first one.
+Inside `src/auth.ts`,
+locate the augmented `Session` interface.
+Change it to the following.
+
+```ts
+import { ExtendedUser } from './types';         // added this
+
+declare module "next-auth" {
+  interface Session extends DefaultSession {
+    user: ExtendedUser                          // changed here
+
+
+  }
+
+  interface User {
+    // Additional properties here:
+    role?: string;
+  }
+}
+```
+
+Notice that we've created an `ExtendedUser` interface
+that is imported from `types.ts`.
+We haven't created this file.
+So let's do it!
+Inside `src`, create a file called `types.ts`.
+
+```ts
+import { type DefaultSession } from 'next-auth';
+/**
+ * Holds types for the application (on the `src` side)
+ */
+
+// Types for the `_meta.json` structure
+export type PrivateInfo = {
+  private: boolean;
+  roles?: string[];
+};
+
+export type MetaJson = {
+  [key: string]: string | any | PrivateInfo;
+};
+
+export type PrivateRoutes = {
+  [key: string]: string[];
+};
+
+// Types for auth
+export type ExtendedUser = {
+    role?: string;
+  } & DefaultSession["user"];
+```
+
+Notice that we simply moved the extended user code
+to `ExtendedUser` inside this file.
+In addition to this, we have also copied the types
+from `src/generatePrivateRoutes.ts` to here, as well.
+All that is left to do is update `src/generatePrivateRoutes.ts`
+to import these!
+
+```ts
+// generatePrivateRoutes.ts
+import { PrivateRoutes, MetaJson } from './types';
+
+// delete the types
+// ...
+```
+
+And that's it!
+We're ready to rock and roll! 🎸
+
+
+### 7.3 Rendering links inside `navbar`
+
+Let's start by conditionally rendering the links
+inside the `navbar`.
+
+First let's go `theme/src/types.ts`
+and add two additional types for the
+`PageItem` and `MenuItem` types
+that are used inside `theme/src/components/navbar.tsx`.
+
+Add the following lines.
+
+```ts
+// `theme/src/types.ts`
+
+import type { MenuItem, PageItem } from 'nextra/normalize-pages'
+import { PrivateInfo } from '../../src/types';
+
+// Extends the PageItem and MenuItem with the `private` property
+export type ExtendedPageItem = { private?: PrivateInfo } & PageItem;
+export type ExtendedMenuItem = { private?: PrivateInfo } & MenuItem;
+```
+
+We are simply extending the `PageItem` and `MenuItem` types
+with the `PrivateInfo` interface that we moved earlier.
+This way, we'll have access to the `private` property when writing code
+inside `navbar.tsx`!
+
+Speaking of which,
+let's finally change the `navbar.tsx` component!
+Head over to `theme/src/components/navbar.tsx`
+
+First, locate the `NavBarProps` type
+on top of the file and change it accordingly.
+We are extending our items' types with the extended types we've defined before
+so we can access the `private` property.
+
+```ts
+export type NavBarProps = {
+  flatDirectories: Item[]
+  items: (ExtendedPageItem | ExtendedMenuItem)[]
+}
+```
+
+Now we're ready to make some changes to the `NavBar` function.
+Head over to this function and use the `useSession()` hook.
+
+```ts
+// theme/src/components/navbar.tsx
+
+import { useSession } from "next-auth/react"
+import { ExtendedPageItem, ExtendedMenuItem } from '../types';
+import { ExtendedUser } from '../../../src/types';
+
+export function Navbar({ flatDirectories, items }: NavBarProps): ReactElement {
+  const config = useConfig()
+  const activeRoute = useFSRoute()
+  const { menu, setMenu } = useMenu()
+
+  const {data, status: session_status} = useSession()     // add this
+  const user = data?.user as ExtendedUser                 // add this
+
+  return (
+    ...
+  )
+```
+
+Great!
+We are now successfully using the `useSession()` hook
+and getting the authenticated (or not) person's session data.
+Now we can leverage this data
+to conditionally render the links inside our `NavBar`!
+
+Because the `Session` object returned by `useSession`
+also has a `status` 
+[(that can be either `"loading"`, `"authenticated"` or `"unauthenticated"`)](https://next-auth.js.org/getting-started/client#usesession),
+we will have to take this into account when changing
+how the `NavBar` renders the links.
+
+Other than this,
+all we have to do is block the rendering
+of links that the user is **not allowed to see**.
+Locate the `return` of the `NavBar` function
+and implement the following changes.
+
+```ts
+  return (
+    <div>
+      <div/>
+      <nav>
+        {config.logoLink ? (
+          <Anchor
+            href={typeof config.logoLink === 'string' ? config.logoLink : '/'}
+            className="nx-flex nx-items-center hover:nx-opacity-75 ltr:nx-mr-auto rtl:nx-ml-auto"
+          >
+            {renderComponent(config.logo)}
+          </Anchor>
+        ) : (
+          <div className="nx-flex nx-items-center ltr:nx-mr-auto rtl:nx-ml-auto">
+            {renderComponent(config.logo)}
+          </div>
+        )}
+        {items.map(pageOrMenu => {
+
+          // Start of changes -------------------
+
+          // Wait until the session is fetched (be it empty or authenticated)
+          if(session_status === "loading") {
+            return null
+          }
+
+          // If it's a public user but the link is marked as private, hide it
+          if(session_status === "unauthenticated") {
+            if(pageOrMenu.private) return null
+          }
+
+          // If the user is authenticated
+          // and the page menu is protected or the role of the user is not present in the array, we block it
+          if(session_status === "authenticated" && user) {
+            if (pageOrMenu.private?.private) {
+              const neededRoles = pageOrMenu.private.roles || []
+              const userRole = user.role
+              if(!userRole || !neededRoles.includes(userRole)) {
+                return null
+              }
+            }
+          }
+
+          // End of changes -------------------
+
+          if (pageOrMenu.display === 'hidden') return null
+
+          // ...
+        })}
+  )
+```
+
+Let's break down what we just implemented:
+- we check if the session status is `"loading"`.
+If so, we render nothing.
+- if the session status is `"unauthenticated"`
+*and* the route is private,
+we don't render the title for the person to see.
+- if the session status is `"authenticated"`,
+it means the person has a session and is logged in.
+If the route is private,
+we check if the person has the necessary role to see it.
+If they don't, we don't render it for the person to see.
+
+And that's it!
+We can test this behaviour!
+If we run our application as is
+(`pnpm run dev`),
+we'll see how everything is the same.
+That's because our person has the `"user"` role,
+which is allowed under `api_reference`.
+
+
+<p align="center">
+  <img width='800' src="https://github.com/dwyl/nextra-demo/assets/17494745/fbe63c64-e97e-446a-9234-f1e9871451ac"/>
+</p>
+
+However, if we head over to `src/auth.ts`
+and change the role to something different...
+
+```ts
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers: providers,
+  callbacks: {
+    jwt({ token, user, account, profile }) {
+      return { ...token, role: "another_role" };   // changed here
+    },
+    session({ session, token }) {
+      session.user.role = token.role
+      return session;
+    },
+  },
+});
+```
+
+And run the application again,
+you'll see that the title is hidden!
+
+<p align="center">
+  <img width='800' src="https://github.com/dwyl/nextra-demo/assets/17494745/6d65a3e9-386e-45ed-937a-5ed584800a3f"/>
+</p>
+
+Hurray! 🎉
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,9 +1,10 @@
 import GitHub from "next-auth/providers/github";
 import NextAuth, { type DefaultSession } from "next-auth";
-import {  DefaultJWT } from "next-auth/jwt";
-import { AdapterSession } from 'next-auth/adapters';
+import { DefaultJWT } from "next-auth/jwt";
+import { AdapterSession } from "next-auth/adapters";
 import { Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
+import { ExtendedUser } from './types';
 
 // We need to add the role to the JWT inside `NextAuth` below, so the `middleware.ts` can have access to it.
 // The problem is that it wasn't adding this `role` custom field, even if we defined it in `auth.ts`.
@@ -19,9 +20,7 @@ declare module "next-auth" {
      * with the new ones defined above. To keep the default session user properties,
      * we need to add them back into the newly declared interface.
      */
-    user: {
-      role?: string;
-    } & DefaultSession["user"];
+    user: ExtendedUser
   }
 
   interface User {
@@ -61,7 +60,7 @@ const providers: Provider[] = [
       };
     },
   }),
-]
+];
 
 // Be sure to not put a development version in production!
 // See https://authjs.dev/guides/testing#credentials-provider-in-development.
@@ -79,14 +78,13 @@ if (process.env.NODE_ENV === "development") {
             email: "bob@alice.com",
             name: "Bob Alice",
             image: "",
-          }
+          };
         }
-        return null
+        return null;
       },
     })
-  )
+  );
 }
-
 
 // The important part: where the `NextAuth` config is exported
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -100,10 +98,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // But because Github's provider is not passing the role
       // (it should, according to https://authjs.dev/guides/role-based-access-control#with-jwt -
       // maybe it's because v5 is still in beta), we're just gonna append it every time
-      return {...token, role: "user"}
+      return { ...token, role: "another_role" };
     },
     session({ session, token }) {
-      session.user.role = token.role;
+      session.user.role = token.role
       return session;
     },
   },

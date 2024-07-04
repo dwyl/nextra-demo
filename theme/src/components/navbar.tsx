@@ -10,7 +10,7 @@ import { Anchor } from './anchor'
 
 export type NavBarProps = {
   flatDirectories: Item[]
-  items: (PageItem | MenuItem)[]
+  items: (ExtendedPageItem | ExtendedMenuItem)[]
 }
 
 const classes = {
@@ -78,10 +78,18 @@ function NavbarMenu({
   )
 }
 
+
+import { useSession } from "next-auth/react"
+import { ExtendedPageItem, ExtendedMenuItem } from '../types';
+import { ExtendedUser } from '../../../src/types';
+
 export function Navbar({ flatDirectories, items }: NavBarProps): ReactElement {
   const config = useConfig()
   const activeRoute = useFSRoute()
   const { menu, setMenu } = useMenu()
+
+  const {data, status: session_status} = useSession()
+  const user = data?.user as ExtendedUser
 
   return (
     <div className="nextra-nav-container nx-sticky nx-top-0 nx-z-20 nx-w-full nx-bg-transparent print:nx-hidden">
@@ -107,6 +115,28 @@ export function Navbar({ flatDirectories, items }: NavBarProps): ReactElement {
           </div>
         )}
         {items.map(pageOrMenu => {
+
+
+          // Wait until the session is fetched (be it empty or authenticated)
+          if(session_status === "loading") return null
+
+          // If it's a public user but the link is marked as private, hide it
+          if(session_status === "unauthenticated") {
+            if(pageOrMenu.private) return null
+          }
+
+          // If the user is authenticated
+          // and the page menu is protected or the role of the user is not present in the array, we block it
+          if(session_status === "authenticated" && user) {
+            if (pageOrMenu.private?.private) {
+              const neededRoles = pageOrMenu.private.roles || []
+              const userRole = user.role
+              if(!userRole || !neededRoles.includes(userRole)) {
+                return null
+              }
+            }
+          }
+
           if (pageOrMenu.display === 'hidden') return null
 
           if (pageOrMenu.type === 'menu') {

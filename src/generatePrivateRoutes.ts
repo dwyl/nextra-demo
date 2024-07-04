@@ -2,20 +2,8 @@ import { Project } from "ts-morph";
 import path from "path";
 import fs from "fs";
 import { globSync } from "fast-glob";
+import { PrivateRoutes, MetaJson } from './types';
 
-// Types for the `_meta.json` structure
-type PrivateInfo = {
-  private: boolean;
-  roles?: string[];
-};
-
-type MetaJson = {
-  [key: string]: string | any | PrivateInfo;
-};
-
-type PrivateRoutes = {
-  [key: string]: string[];
-};
 
 /**
  * This function looks at the file system under a path and goes through each `_meta.json` looking for private routes recursively.

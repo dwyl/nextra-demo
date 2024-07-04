@@ -315,10 +315,10 @@ function Menu({
     <ul className={cn(classes.list, className)}>
       {directories.map(item => {
 
-        if(!shouldLinkBeRenderedAccordingToUserRole(session, item)) 
+        if(!shouldLinkBeRenderedAccordingToUserRole(session, item))
           return null
 
-        return         !onlyCurrentDocs || item.isUnderCurrentDocsTree ? (
+        return !onlyCurrentDocs || item.isUnderCurrentDocsTree ? (
           item.type === 'menu' ||
           (item.children && (item.children.length || !item.withIndexPage)) ? (
             <Folder key={item.name} item={item} anchors={anchors} />

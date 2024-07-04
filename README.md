@@ -51,6 +51,9 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
     - [7.1 With which methods can we do this?](#71-with-which-methods-can-we-do-this)
     - [7.2 Using `useSession()`](#72-using-usesession)
     - [7.3 Rendering links inside `navbar`](#73-rendering-links-inside-navbar)
+    - [7.4 Rendering links inside `sidebar`](#74-rendering-links-inside-sidebar)
+      - [7.4.1 Understanding how directory items are passed down to the `sidebar`](#741-understanding-how-directory-items-are-passed-down-to-the-sidebar)
+      - [7.4.2 Conditionally rendering links in `Menu` inside the `sidebar`](#742-conditionally-rendering-links-in-menu-inside-the-sidebar)
 - [Change theme](#change-theme)
 - [zones (basicamente ter uma home page para ir aos docs e depois ter o signin noutro url)](#zones-basicamente-ter-uma-home-page-para-ir-aos-docs-e-depois-ter-o-signin-noutro-url)
 
@@ -2157,6 +2160,272 @@ you'll see that the title is hidden!
 </p>
 
 Hurray! 🎉
+
+Because we're going to be using this feature of conditionally hiding links,
+let's make it a function so we can use it in other places
+(namely the `sidebar`).
+
+Inside `theme/src/utils/render.tsx`,
+add the following function.
+This function is the same code that we just wrote inside `navbar.tsx`.
+
+```ts
+import { ExtendedUser } from "../../../src/types";
+import { ExtendedItem, ExtendedPageItem, ExtendedMenuItem } from "../types";
+import { SessionContextValue } from "next-auth/react";
+
+export function shouldLinkBeRenderedAccordingToUserRole(
+  session: SessionContextValue<boolean>,
+  item: ExtendedItem | ExtendedPageItem | ExtendedMenuItem
+) {
+  const { data, status: session_status } = session;
+  const user = data?.user as ExtendedUser;
+
+  // Wait until the session is fetched (be it empty or authenticated)
+  if (session_status === "loading") return false;
+
+  // If it's a public user but the link is marked as private, hide it
+  if (session_status === "unauthenticated") {
+    if (item.private) return false;
+  }
+
+  // If the user is authenticated
+  // and the page menu is protected or the role of the user is not present in the array, we block it
+  if (session_status === "authenticated" && user) {
+    if (item.private?.private) {
+      const neededRoles = item.private.roles || [];
+      const userRole = user.role;
+      if (!userRole || !neededRoles.includes(userRole)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+```
+
+Great!
+Now we just need to use it inside our `navbar.tsx` file.
+
+```ts
+// theme/src/components/navbar.tsx
+
+// ...
+
+// Old code --
+const {data, status: session_status} = useSession()
+const user = data?.user as ExtendedUser
+
+// New code --
+const session = useSession()
+
+// ...
+
+// Old code --
+if(session_status === "loading") return null
+
+if(session_status === "unauthenticated") {
+  if(pageOrMenu.private) return null
+}
+
+if(session_status === "authenticated" && user) {
+  if (pageOrMenu.private?.private) {
+    const neededRoles = pageOrMenu.private.roles || []
+    const userRole = user.role
+    if(!userRole || !neededRoles.includes(userRole)) {
+      return null
+    }
+  }
+}
+
+// New code --
+if(!shouldLinkBeRenderedAccordingToUserRole(session, pageOrMenu))
+  return null
+```
+
+Awesome!
+This makes things simple for the rest of our guide!
+
+
+### 7.4 Rendering links inside `sidebar`
+
+To conditionally render inside `theme/src/components/sidebar.tsx` takes a bit more work.
+This is because this component is used to display both the structure of the document inside each page
+but also to showcase the menu in mobile.
+
+#### 7.4.1 Understanding how directory items are passed down to the `sidebar`
+
+If you take a look inside the `sidebar.tsx` file,
+you will find the following piece of code.
+
+```ts
+interface SideBarProps {
+  docsDirectories: PageItem[]
+  flatDirectories: Item[]
+  fullDirectories: Item[]
+  asPopover?: boolean
+  headings: Heading[]
+  includePlaceholder: boolean
+}
+```
+
+These are the props that are passed on to the `Sidebar` function component.
+What's important is what `docsDirectories`, `flatDirectories` and `fullDirectories` pertain to.
+If we look at https://github.com/dwyl/nextra-demo/blob/fd8f09a9c5cfa4cb4f9d7f486663e4e330619492/theme/src/index.tsx#L121-L140, 
+we'll see that these three parameters are fetched from calling the `normalizePages()` function
+from the `nextra/normalize-pages` package.
+
+- **`docsDirectories`** are used in the sidebar menu
+when in desktop mode.
+You can find it on the left side of the screen,
+showing the structure of the page
+and of the parent directory.
+
+<p align="center">
+  <img width='800' src="https://github.com/dwyl/nextra-demo/assets/17494745/30b18dd1-51d5-432f-bc57-842bcf97f62a"/>
+</p>
+
+> [!IMPORTANT]
+> **This array can be extended so it includes our custom `private` property we've added to the `_meta.json` files.**
+> This can be done with the types we've defined earlier in `theme/src/types.ts`.
+
+
+- **`fullDirectories`** are used in the sidebar menu
+in mobile mode.
+The sidebar here takes on a role of both the **`navbar`**
+and **the page contents**.
+So, it will show the page routes alongside its children
+(hence the name `fullDirectories`).
+
+<p align="center">
+  <img width='800' src="https://github.com/dwyl/nextra-demo/assets/17494745/5a460efc-4855-4cf6-9a00-d71bdc03761f"/>
+</p>
+
+> [!IMPORTANT]
+> **This array can be extended so it includes our custom `private` property we've added to the `_meta.json` files.**
+> This can be done with the types we've defined earlier in `theme/src/types.ts`.
+
+- **`flatDirectories`** are used inside the search component.
+
+> [!IMPORTANT]
+> **This array can NOT be extended with the `private` property we've added to the `_meta.json` files, at least [through normal augmentation](https://www.digitalocean.com/community/tutorials/typescript-module-augmentation)**.
+> To include the `private` property in each item of this array,
+> we'll have to find another way.
+> For this section, we won't be needing to use this array, though.
+
+Now that we have an idea what each `xxxDirectories` paramater pertains to,
+let's redefine them with our extended types.
+Inside `theme/src/components/sidebar.tsx`,
+change it to the following.
+
+```ts
+// theme/src/components/sidebar.tsx
+interface SideBarProps {
+  docsDirectories: ExtendedPageItem[]   // they have the `private` property
+  flatDirectories: ExtendedItem[]       // they DON'T have the `private` property (used for search)
+  fullDirectories: ExtendedItem[]       // they have the `private` property
+  asPopover?: boolean
+  headings: Heading[]
+  includePlaceholder: boolean
+}
+```
+
+Great!
+We are using a new type `ExtendedItem` that we haven't defined yet.
+Let's do that inside `theme/src/types.ts`, alongside the others.
+
+```ts
+// theme/src/types.tsx
+
+export type ExtendedItem = { private?: PrivateInfo } & Item;
+```
+
+Awesome! 🥳
+
+
+#### 7.4.2 Conditionally rendering links in `Menu` inside the `sidebar`
+
+If we take a closer look inside `navbar.tsx`,
+you will see the `Menu` function
+is what renders the links
+(it either receives `fullDirectories` or `docDirectories` arrays).
+
+So this is the function where we want to make changes! 😊
+
+First, let's change the `MenuProps`
+to our extended types
+so we have access to the `private` property we've defined inside our `_meta.json` files.
+
+```ts
+interface MenuProps {
+  directories: ExtendedPageItem[] | ExtendedItem[]    // change here
+  anchors: Heading[]
+  base?: string
+  className?: string
+  onlyCurrentDocs?: boolean
+}
+```
+
+And now, inside the `Menu` function,
+simply do the same thing we've done in the `navbar`!
+
+```ts
+function Menu({
+  directories,
+  anchors,
+  className,
+  onlyCurrentDocs
+}: MenuProps): ReactElement {
+
+  const session = useSession()
+
+  return (
+    <ul className={cn(classes.list, className)}>
+      {directories.map(item => {
+
+        if(!shouldLinkBeRenderedAccordingToUserRole(session, item))
+          return null
+
+        return !onlyCurrentDocs || item.isUnderCurrentDocsTree ? (
+          item.type === 'menu' ||
+          (item.children && (item.children.length || !item.withIndexPage)) ? (
+            <Folder key={item.name} item={item} anchors={anchors} />
+          ) : (
+            <File key={item.name} item={item} anchors={anchors} />
+          )
+        ) : null
+      }
+
+      )}
+    </ul>
+  )
+}
+```
+
+We are calling the `useSession()` hoook
+and using the `shouldLinkBeRenderedAccordingToUserRole()` function to render the links
+according to the person role!
+
+And that's it!
+Congratulations,
+we've just conditionally rendered
+all the private properties in both our `sidebar` and `navbar`!
+
+You may notice that the `mega_private` directory
+is completely hidden from the sidebar.
+This is because our person has a `"user"` role,
+which is different to what this directory requires.
+
+<p align="center">
+  <img width='800' src="https://github.com/dwyl/nextra-demo/assets/17494745/30b18dd1-51d5-432f-bc57-842bcf97f62a"/>
+</p>
+
+Great job! 🎉
+
+
+
+
 
 
 

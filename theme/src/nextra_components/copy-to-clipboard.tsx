@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactElement } from 'react'
 import { useCallback, useEffect, useState } from 'react'
-import { CheckIcon, CopyIcon } from '../icons'
+import { CheckIcon, CopyIcon } from '../nextra_icons'
 import { Button } from './button'
 
 export const CopyToClipboard = ({

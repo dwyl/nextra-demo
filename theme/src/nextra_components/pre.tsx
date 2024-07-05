@@ -1,7 +1,7 @@
 import cn from 'clsx'
 import type { ComponentProps, ReactElement } from 'react'
 import { useCallback, useRef } from 'react'
-import { WordWrapIcon } from '../icons'
+import { WordWrapIcon } from '../nextra_icons'
 import { Button } from './button'
 import { CopyToClipboard } from './copy-to-clipboard'
 

@@ -11,4 +11,7 @@ export { Th } from './th'
 export { Tr } from './tr'
 export { Cards, Card } from './cards'
 export { FileTree } from './file-tree'
+// This should throw an error because it's from `nextra`, which is not directly accessible.
+// But it will still work, we don't need the types, since this package just replaces ```mermaid``` code blocks into `<Mermaid> React components
+// @ts-expect-error
 export { Mermaid } from '@theguild/remark-mermaid/mermaid'

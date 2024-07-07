@@ -25,7 +25,17 @@ const config: Config = {
     // Testing auth with `next-auth` complains (consider switching to Vitest)
     // Doesn't seem to have a proper solution. See https://github.com/nextauthjs/next-auth/issues/4198.
     "src/auth.ts",
+
+    // Middleware can't be properly mocked to test.
     "src/middleware.ts",
+
+    // No need to unit test types
+    "src/types.ts",
+
+    // The "_app.ts" runs on every page and can't be properly tested. There's no need to, regardless.
+    "src/pages/_app.ts",
+
+    // The `app` folder is only used to export the default handlers from `next-auth`.
     "src/app"
   ],
   moduleNameMapper: {

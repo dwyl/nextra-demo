@@ -2,6 +2,8 @@
 
 # Learn Nextra
 
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/dwyl/nextra-demo/ci.yml?label=build&style=flat-square&branch=main)
+[![codecov.io](https://img.shields.io/codecov/c/github/dwyl/nextra-demo/master.svg?style=flat-square)](https://codecov.io/github/dwyl/nextra-demo?branch=master)
 [![HitCount](https://hits.dwyl.com/dwyl/nextra-demo.svg?style=flat-square)](https://hits.dwyl.com/dwyl/nextra-demo)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat-square)](https://github.com/dwyl/nextra-demo/issues)
 

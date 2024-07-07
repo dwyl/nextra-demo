@@ -13,6 +13,10 @@ jest.mock("next-auth/react", () => {
 });
 
 describe("LoginOrUserInfo", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+  
   it('shows "Sign In" button when no session is found', () => {
     const session: DefaultSession = {
       expires: "",

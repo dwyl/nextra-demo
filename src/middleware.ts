@@ -30,9 +30,6 @@ export default auth(async (req, ctx) => {
   }
 
   return NextResponse.next()
-
-  
-
 });
 
 export const config = {

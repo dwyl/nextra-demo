@@ -34,6 +34,10 @@ const existsSyncMock = existsSync as jest.Mock;
 
 // Test suite for getPrivateRoutes function
 describe("getPrivateRoutes", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+  
   it("should return the correct private routes", () => {
     globSyncMock.mockReturnValue(["pages/dir1/_meta.json"]);
     existsSyncMock.mockReturnValue(true);

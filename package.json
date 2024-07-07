@@ -8,7 +8,8 @@
     "start": "next start",
     "e2e:test": "npx playwright test",
     "e2e:test:show-report": "npx monocart show-report ./e2e-test-results/monocart-report.html",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "types:check": "tsc --noEmit"
   },
   "dependencies": {
     "next": "^14.2.4",

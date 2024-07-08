@@ -1,15 +1,15 @@
 <div align="center">
 
-# Learn Nextra
+# `Nextra` _Demo_!
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/dwyl/nextra-demo/ci.yml?label=build&style=flat-square&branch=main)
 [![codecov.io](https://img.shields.io/codecov/c/github/dwyl/nextra-demo/master.svg?style=flat-square)](https://codecov.io/github/dwyl/nextra-demo?branch=master)
 [![HitCount](https://hits.dwyl.com/dwyl/nextra-demo.svg?style=flat-square)](https://hits.dwyl.com/dwyl/nextra-demo)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat-square)](https://github.com/dwyl/nextra-demo/issues)
 
-A comprehensive demo 
-of using `Nextra` for documentation.
-Learn how to create a site with 
+A comprehensive demo / tutorial
+using `Nextra` for a documentation site <br />
+with 
 **authentication** 
 (private pages), 
 search and analytics!
@@ -21,12 +21,12 @@ Note: the Table of Contents is auto-generated/updated by Markdown All-in-One
 https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
 -->
 
-- [Learn Nextra](#learn-nextra)
-- [Why?](#why)
-- [What?](#what)
-- [Who?](#who)
-- [How?](#how)
-  - [0. Start a new project](#0-start-a-new-project)
+- [`Nextra` _Demo_!](#nextra-demo)
+- [Why? 🤷‍♀️](#why-️)
+- [What? ✨](#what-)
+- [Who? 👥](#who-)
+- [How? 👩‍💻](#how-)
+  - [0. Start a new project 🆕](#0-start-a-new-project-)
   - [1. Organizing your content](#1-organizing-your-content)
     - [1.1 External  links and hidden routes](#11-external--links-and-hidden-routes)
     - [1.2 Adding items to the navbar](#12-adding-items-to-the-navbar)
@@ -61,94 +61,104 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
 - [zones (basicamente ter uma home page para ir aos docs e depois ter o signin noutro url)](#zones-basicamente-ter-uma-home-page-para-ir-aos-docs-e-depois-ter-o-signin-noutro-url)
 
 
-# Why?
+# Why? 🤷‍♀️
 
-If you work building software,
-you must have come across technical documentation at some point in your career.
-Either be it an API reference or internal manuals,
-technical documentation 
+Working as a software engineer,
+you come across technical documentation daily.
+From API references to internal manuals,
+technical documentation
 **is vital for the development process**.
-Everyone expects it, 
-but without it,
-knowledge of the application becomes siloed 
-within individuals which lead to inefficiencies 
-in the whole development process.
+Everyone expects docs as a 
+[hygiene factor](https://en.wikipedia.org/wiki/Two-factor_theory#:~:text=Hygiene%20factors).
+Without docs,
+knowledge of the application becomes siloed
+and means you cannot scale your team
+or continue in the event of someone leaving!
 
-To ensure long-term sustainability of your software projects,
-having a clear and detailed record
+Great docs ensure long-term sustainability of your software projects.
+Having a clear record
 of the `why`, `how` and `what`
-helps maintain consistency 
+helps maintain consistency
 and increases the quality of your work!
 
-Whether it is meant as an internal reference 
+Whether it is meant as an internal reference
 or you're creating documentation for public-facing clients
-that are using your project, 
+that are using your project,
 having documentation benefits both the developers and users alike.
 
 
-# What?
+# What? ✨
 
 [`Nextra`](https://nextra.site/) is a framework
 that makes it easy for you to create a documentation static website
-fully optimized and powered by [`Next.js`](https://nextjs.org/).
+fully optimized and powered by 
+[`Next.js`](https://github.com/dwyl/learn-nextjs).
 
 It simpifies the process of creating and maintaining documentation
 by offering a myriad of features, such as:
-- themable design system.
-- markdown support.
-- full-text search out-of-the-box.
-- automatic [`a11y`](https://www.a11yproject.com/).
-- filesystem-based organization.
+- Themeable design system.
+- Markdown and [`MDX`](https://nextra.site/docs/guide/markdown) support.
+- Full-text search out-of-the-box.
+- Automatic [`a11y`](https://www.a11yproject.com/).
+- Filesystem-based organization.
 
-Its integration with `Next.js` means that it's fully customizable,
-making it ideal for your team to quickly generate a website
-that is useful for both internal and external documentation.
+The integration with
+[`Next.js`](https://github.com/dwyl/learn-nextjs)
+makes `Nextra` fully customizable,
+thus ideal for your team
+to quickly generate a website
+that is useful for both internal and external stakeholders.
 
+# Who? 👥
 
-# Who?
-
-This walkthrough is meant for beginners of the framework
-but also seasoned software developers 
-that want to create internal and external documentation for their teams.
+This walkthrough is meant for beginners
+and seasoned software engineers alike
+who want to create internal and external
+documentation for their teams.
 
 This will **not be an introduction to technical writing**,
 it will solely focus on the `Nextra` framework.
-We recommend visiting https://developers.google.com/tech-writing/overview
+We recommend visiting 
+[developers.google.com/tech-writing](https://developers.google.com/tech-writing/overview)
 if you are interested in learning more about technical writing.
 
-If you find it useful, give the repo a star! ⭐️
+If you find it useful, please give the repo a star! ⭐️
 
 If you get stuck, have questions/suggestions
 or just want to discuss this further,
-[do open an issue](https://github.com/dwyl/nextra-demo/issues)!
+[please open an issue](https://github.com/dwyl/nextra-demo/issues)!
 
+# How? 👩‍💻 
 
-# How?
-
-Are we ready to start? Let's go!
+Ready? Let's go! 🚀
 
 > [!TIP]
 >
 > Some of the information found in this document
-> can also be found in the [`Nextra`'s offical docs](https://nextra.site/docs).
-> We recommend going through their documentation 
-> (it's not long) to better have a feeling over the framework.
+> can also be found in the 
+> [official `Nextra` docs](https://nextra.site/docs).
+> We recommend going through their docs
+> if you get stuck 
+> or want a more in-depth understanding of the framework.
 
-When using `Nextra`, 
+When using `Nextra`,
 you first have to make a choice:
-- you either use a *default theme*.
-- you customize your own.
+either use a **`default` theme**.
+***or*** **_customize_ your own**.
 
-The vast majority of people will go for the former.
-However, if you are looking to have a more customized look,
+The vast majority of people will use the **`default` theme**.
+However, if you need a _specific_ look & feel,
 you may have to create your own theme.
-[It's easier to start with a custom theme than using a default one and change it afterwards](https://github.com/shuding/nextra/issues/2926).
+We learned the hard way that it's _much_ easier 
+to start with a custom theme 
+than using a `default` one and attempt to change it afterwards ...
+see:
+[nextra#2926](https://github.com/shuding/nextra/issues/2926)
 
-In our case, 
-we'll start with the default theme and change it if needed.
+For this demo,
+we'll start with the `default` theme and change it as needed.
 
-
-## 0. Start a new project
+## 0. Start a new project 🆕
 
 Let's create our project.
 We first need to install some dependencies.

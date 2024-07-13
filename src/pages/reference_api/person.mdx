@@ -10,7 +10,7 @@ for any personalized applications.
 
 ### Get Person
 
-Retrieve a list of all persons.
+Retrieve a list of all persons (people).
 
 **Endpoint:**
 ```
@@ -19,12 +19,12 @@ GET /api/persons
 
 **Response:**
 
-The response includes a list of person objects, 
+The response includes a list of `person` objects, 
 each containing the following fields:
-- `id`: The unique identifier for the person.
-- `name`: The name of the person.
-- `email`: The email address.
-- `role`: The role of the person has in the system.
+- `id`: The unique identifier for the `person`.
+- `name`: The name of the `person`.
+- `email`: The email address the `person` provided.
+- `role`: The role of the `person` has in the system.
 
 **Example:**
 
@@ -47,7 +47,7 @@ each containing the following fields:
 
 ### Create Person
 
-Add a new user to the system.
+Add a new `person` to the system.
 
 **Endpoint:**
 ```
@@ -57,9 +57,9 @@ POST /api/person
 **Request Body:**
 
 The request body should include the following fields:
-- `name` (required): The name of the person.
-- `email` (required): The email address of the person.
-- `role` (optional): The role of the person. Default is `viewer`.
+- `name` (required): The name of the `person`.
+- `email` (required): The email address of the `person`.
+- `role` (optional): The role of the `person`. Default is `viewer`.
 
 **Example:**
 
@@ -73,7 +73,7 @@ The request body should include the following fields:
 
 **Response:**
 
-The response includes the created person object.
+The response includes the created `person` object.
 
 ```json
 {
@@ -86,7 +86,7 @@ The response includes the created person object.
 
 ### Update Person
 
-Modify an existing person's information.
+Modify an existing `person` information.
 
 **Endpoint:**
 ```
@@ -96,9 +96,9 @@ PUT /api/person/:id
 **Request Body:**
 
 The request body can include any of the following fields to update:
-- `name` (optional): The name of the person.
-- `email` (optional): The email address of the person.
-- `role` (optional): The role of the person.
+- `name` (optional): The name of the `person`.
+- `email` (optional): The email address of the `person`.
+- `role` (optional): The role of the `person`.
 
 **Example:**
 
@@ -112,7 +112,7 @@ The request body can include any of the following fields to update:
 
 **Response:**
 
-The response includes the updated person object.
+The response includes the updated `person` object.
 
 ```json
 {
@@ -125,7 +125,7 @@ The response includes the updated person object.
 
 ### Delete Person
 
-Remove a person from the system.
+Remove a `person` from the system.
 
 **Endpoint:**
 ```
@@ -138,15 +138,15 @@ The response includes a confirmation message.
 
 ```json
 {
-  "message": "User deleted successfully."
+  "message": "Person deleted successfully."
 }
 ```
 
 ## Summary
 
-The Person API provides essential operations 
+The `person` API provides essential operations 
 for managing people within your `Nextra` documentation site. 
-Whether you need to add a new person, update or remove existing ones, 
+Whether you need to add a new `person`, update or remove existing ones, 
 these endpoints offer the flexibility 
 to handle all person-related tasks efficiently. 
 For more information on other available APIs, 

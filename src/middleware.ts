@@ -7,7 +7,13 @@ import { NextResponse } from "next/server";
 // It is manipulated before the project is compiled so it knows all the routes that are private
 // according to what is defined in "_meta.json" files.
 // See `package.json` and the `private-route-gen` script for context.
-const privateRoutesMap: any = {"/reference_api":["user"],"/reference_api/about":["user"],"/reference_api/users":["user"],"/reference_api/mega_private":["cant_enter"],"/reference_api/mega_private/hello":["cant_enter"]};
+const privateRoutesMap: any = {
+  "/reference_api":["user"],
+  "/reference_api/about":["user"],
+  "/reference_api/person":["user"],
+  "/reference_api/mega_private":["cant_enter"],
+  "/reference_api/mega_private/hello":["cant_enter"]
+};
 
 export default auth(async (req, ctx) => {
   const currentPath = req.nextUrl.pathname;

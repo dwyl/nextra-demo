@@ -6,16 +6,18 @@
 
 > [!TIP]
 >
-> Some of the information found in these notes
+> Some of the info in these notes
 > can also be found in the
-> [official `Nextra` docs](https://nextra.site/docs).
-> We recommend going through their docs
-> if you get stuck 
+> official `Nextra` docs: 
+> [nextra.site/docs](https://nextra.site/docs)
+> <br />
+> We recommend going through the docs
+> if you get stuck
 > or want a more in-depth understanding of the framework.
 
 When using `Nextra`,
-you _first_ have to choose:
-either use a **`default` theme**
+you _first_ have to choose: <br />
+_either_ use a **`default` theme**
 ***or*** **_customize_ your own**.
 
 The vast majority of people will use the **`default` theme**.
@@ -98,22 +100,38 @@ e.g:
 which will add a `copy` button to code snippets.
 
 Lastly, we need to create
-a corresponding 
-`theme.config.jsx` 
+a corresponding
+`theme.config.jsx`
 file in project root directory.
-It will be used to configure the `Nextra` site theme.
+It is used to configure the `Nextra` site theme.
+Add the following code to it:
+
+```js
+import { DocsThemeConfig } from "nextra-theme-docs";
+
+const config: DocsThemeConfig = {
+    logo: <span>Nextra Docs</span>,
+    project: {
+      link: 'https://github.com/shuding/nextra'
+    }
+  }
+
+export default config
+```
+
+Save the file and continue.
 
 > [!TIP]
 >
-> Full theme configurations docs:
+> Full theme config docs:
 > [nextra.site/docs/docs-theme](https://nextra.site/docs/docs-theme/theme-configuration).
 
 Given that
 `Nextra` is a **file-based system framework**
-(like `Next.js`),
+(based on `Next.js`),
 we create docs
 under the `/pages` directory.
-Create a file with the path 
+Create a file with the path
 `pages/index.mdx`
 and type/paste the following markdown:
 
@@ -135,11 +153,13 @@ Hello, world!
 
 Let's see the first page;
 Run:
+
 ```sh
 pnpm run dev
 ```
+
 and visit
-`http://localhost:3000`
+[localhost:3000](http://localhost:3000/)
 in your web browser
 You should see your page!
 
@@ -158,7 +178,8 @@ so it's easier to navigate.
 
 In `Nextra`,
 the site and page structure can be configured via
-[`_meta.json`](https://nextra.site/docs/guide/organize-files) files.
+[`_meta.json`](https://nextra.site/docs/guide/organize-files)
+files.
 These files will affect the layout of the theme,
 especially the sidebar/navigation bar.
 
@@ -201,27 +222,23 @@ As you can see, you can group pages together in directories
 **to create _a hierarchy_** of pages,
 thus organizing them neatly.
 
-If you want a folder to have their own page,
-you can simply add a `.mdx` file
-a level above, with the name of the folder.
+If you want a directory to have its own page,
+you can simply add an `index.mdx` file.
 Let's say we want `api_reference` to have an introductory page
 when we click on it on the sidebar.
-Simply create the file above the folder's level!
+Simply create the `index.mdx` file:
 
 ```sh
 pages
 |_ api_reference
     |_ _meta.json
     |_ about.mdx
+    |_ index.mdx   // added this
 |_ _meta.json
 |_ about.mdx
 |_ contact.mdx
-|_ api_reference.mdx   // added this
 |_ index.mdx
 ```
-
-Alternatively, create an `index.mdx` file inside `api_reference`
-to achieve a similar result.
 
 Fill each `.mdx` file with content
 then run:
@@ -2256,7 +2273,8 @@ So this is the function where we want to make changes! 😊
 
 First, let's change the `MenuProps`
 to our extended types
-so we have access to the `private` property we've defined inside our `_meta.json` files.
+so we have access to the `private` property 
+we've defined inside our `_meta.json` files.
 
 ```ts
 interface MenuProps {

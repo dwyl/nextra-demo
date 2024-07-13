@@ -3,7 +3,7 @@
 # `Nextra` _Demo_
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/dwyl/nextra-demo/ci.yml?label=build&style=flat-square&branch=main)
-[![codecov.io](https://img.shields.io/codecov/c/github/dwyl/nextra-demo/master.svg?style=flat-square)](https://codecov.io/github/dwyl/nextra-demo?branch=master)
+[![codecov.io](https://img.shields.io/codecov/c/github/dwyl/nextra-demo/main.svg?style=flat-square)](https://codecov.io/github/dwyl/nextra-demo?branch=main)
 [![HitCount](https://hits.dwyl.com/dwyl/nextra-demo.svg?style=flat-square)](https://hits.dwyl.com/dwyl/nextra-demo)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat-square)](https://github.com/dwyl/nextra-demo/issues)
 
@@ -42,7 +42,7 @@ you come across technical documentation daily.
 From API references to internal manuals,
 technical documentation
 **is vital for the development process**.
-Everyone expects docs as a 
+Everyone expects docs as a
 [hygiene factor](https://en.wikipedia.org/wiki/Two-factor_theory#:~:text=Hygiene%20factors).
 Without docs,
 knowledge of the application becomes siloed

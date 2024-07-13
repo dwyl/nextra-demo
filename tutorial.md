@@ -223,7 +223,7 @@ As you can see, you can group pages together in directories
 thus organizing them neatly.
 
 If you want a directory to have its own page,
-you can simply add an `index.mdx` file.
+you can simply add an `index.mdx` file in the directory.
 Let's say we want `api_reference` to have an introductory page
 when we click on it on the sidebar.
 Simply create the `index.mdx` file:

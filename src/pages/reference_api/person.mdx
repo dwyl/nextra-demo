@@ -1,0 +1,153 @@
+# Person API
+
+The `Person` API allows you to manage personal data 
+within your Nextra-powered documentation site. 
+This endpoint provides functionalities to create, retrieve, update, 
+and delete `person` information, making it a crucial component 
+for any personalized applications.
+
+## Endpoints
+
+### Get Person
+
+Retrieve a list of all persons.
+
+**Endpoint:**
+```
+GET /api/persons
+```
+
+**Response:**
+
+The response includes a list of person objects, 
+each containing the following fields:
+- `id`: The unique identifier for the person.
+- `name`: The name of the person.
+- `email`: The email address.
+- `role`: The role of the person has in the system.
+
+**Example:**
+
+```json
+[
+  {
+    "id": "1",
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "role": "admin"
+  },
+  {
+    "id": "2",
+    "name": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "role": "editor"
+  }
+]
+```
+
+### Create Person
+
+Add a new user to the system.
+
+**Endpoint:**
+```
+POST /api/person
+```
+
+**Request Body:**
+
+The request body should include the following fields:
+- `name` (required): The name of the person.
+- `email` (required): The email address of the person.
+- `role` (optional): The role of the person. Default is `viewer`.
+
+**Example:**
+
+```json
+{
+  "name": "Alice Johnson",
+  "email": "alice.johnson@example.com",
+  "role": "editor"
+}
+```
+
+**Response:**
+
+The response includes the created person object.
+
+```json
+{
+  "id": "3",
+  "name": "Alice Johnson",
+  "email": "alice.johnson@example.com",
+  "role": "editor"
+}
+```
+
+### Update Person
+
+Modify an existing person's information.
+
+**Endpoint:**
+```
+PUT /api/person/:id
+```
+
+**Request Body:**
+
+The request body can include any of the following fields to update:
+- `name` (optional): The name of the person.
+- `email` (optional): The email address of the person.
+- `role` (optional): The role of the person.
+
+**Example:**
+
+```json
+{
+  "name": "Alice Johnson",
+  "email": "alice.johnson@newdomain.com",
+  "role": "admin"
+}
+```
+
+**Response:**
+
+The response includes the updated person object.
+
+```json
+{
+  "id": "3",
+  "name": "Alice Johnson",
+  "email": "alice.johnson@newdomain.com",
+  "role": "admin"
+}
+```
+
+### Delete Person
+
+Remove a person from the system.
+
+**Endpoint:**
+```
+DELETE /api/person/:id
+```
+
+**Response:**
+
+The response includes a confirmation message.
+
+```json
+{
+  "message": "User deleted successfully."
+}
+```
+
+## Summary
+
+The Person API provides essential operations 
+for managing people within your `Nextra` documentation site. 
+Whether you need to add a new person, update or remove existing ones, 
+these endpoints offer the flexibility 
+to handle all person-related tasks efficiently. 
+For more information on other available APIs, 
+refer back to the [API Reference](index).

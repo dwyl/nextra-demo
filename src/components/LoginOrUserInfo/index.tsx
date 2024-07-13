@@ -13,6 +13,8 @@ export default function LoginOrUserInfo({ session } : Readonly<{session: Default
       </div>
     );
   } else {
-    return <button onClick={() => signIn()}>SIGN IN</button>;
+    return <button onClick={() => signIn()} 
+    className="nx-bg-blue-500 hover:nx-bg-blue-700 nx-text-white py-2 px-4 nx-rounded">
+    SIGN IN</button>;
   }
 }

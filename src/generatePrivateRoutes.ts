@@ -6,11 +6,15 @@ import { PrivateRoutes, MetaJson } from './types';
 
 
 /**
- * This function looks at the file system under a path and goes through each `_meta.json` looking for private routes recursively.
- * It is expecting the `_meta.json` values of keys to have a property called "private" to consider the route as private for specific roles.
- * If a parent is private, all the children are private as well. The children inherit the roles of their direct parent.
+ * This function looks at the file system under a path 
+ * and goes through each `_meta.json` looking for private routes recursively.
+ * It is expecting the `_meta.json` values of keys to have a property 
+ * called "private" to consider the route as private for specific roles.
+ * If a parent is private, all the children are private as well. 
+ * The children inherit the roles of their direct parent.
  * @param pagesDir path to recursively look for.
- * @returns map of private routes as key and array of roles that are permitted to access the route.
+ * @returns map of private routes as key and array of roles that 
+ * are permitted to access the route.
  */
 export function getPrivateRoutes(pagesDir: string): PrivateRoutes {
   let privateRoutes: PrivateRoutes = {};
@@ -19,7 +23,9 @@ export function getPrivateRoutes(pagesDir: string): PrivateRoutes {
   const metaFiles = globSync(path.join(pagesDir, "**/_meta.json"));
 
   // Variable to keep track if parent is private on nested routes and its role
-  const rootPrivateSettings: { [key: string]: { private: boolean; roles: string[] } } = {};
+  const rootPrivateSettings: { 
+    [key: string]: { private: boolean; roles: string[] } 
+  } = {};
 
   // Iterate over the found meta files
   for (const file of metaFiles) {
@@ -48,7 +54,8 @@ export function getPrivateRoutes(pagesDir: string): PrivateRoutes {
       } else {
         // Check if the parent folder is private and inherit roles
         const parentDir = path.resolve(dir, "..");
-        if (rootPrivateSettings[parentDir] && rootPrivateSettings[parentDir].private) {
+        if (rootPrivateSettings[parentDir] && 
+            rootPrivateSettings[parentDir].private) {
           const parentRoles = rootPrivateSettings[parentDir].roles;
           privateRoutes[route] = parentRoles;
         }
@@ -56,12 +63,12 @@ export function getPrivateRoutes(pagesDir: string): PrivateRoutes {
     }
   }
 
-  // Now let's just do a second pass to clean-up possible unwanted/invalid routes
+  // Second pass to clean-up possible unwanted/invalid routes
   for (const route of Object.keys(privateRoutes)) {
     const fullPath = path.join(pagesDir, route);
     const lastSegment = route.split("/").pop();
 
-    // Remove separators or any route that doesn't correspond to an existing file/directory
+    // Remove separators or any route that doesn't match existing file/directory
     if (lastSegment === "---") {
       delete privateRoutes[route];
       continue;
@@ -80,8 +87,8 @@ export function getPrivateRoutes(pagesDir: string): PrivateRoutes {
 // - - - - - - - - - - - - - - - - - -  - - - - -
 // `middleware.ts` is changed by executing the code below.
 
-const CONST_VARIABLE_NAME = "privateRoutesMap"; // Name of the constant inside `middleware.ts` to be manipulated
-const DIRECTORY = "pages"; // Directory to look for the routes (should be `pages`, according to Nextra's file system)
+const CONST_VARIABLE_NAME = "privateRoutesMap"; // const inside `middleware.ts` 
+const DIRECTORY = "pages"; // Dir to look for the routes (should be `pages`, according to Nextra's file system)
 
 export function changeMiddleware() {
 
@@ -91,7 +98,9 @@ export function changeMiddleware() {
   
   // Initialize the project and source file
   const project = new Project();
-  const sourceFile = project.addSourceFileAtPath(path.resolve(__dirname, "middleware.ts"));
+  const sourceFile = project.addSourceFileAtPath(
+      path.resolve(__dirname, "middleware.ts")
+    );
   
   // Find the variable to replace and change it's declaration
   const variable = sourceFile.getVariableDeclaration(CONST_VARIABLE_NAME);
@@ -99,7 +108,7 @@ export function changeMiddleware() {
     variable.setInitializer(JSON.stringify(privateRoutes));
     sourceFile.saveSync();
   } else {
-    console.error("Variable not found in `middleware.ts`. File wasn't changed.");
+    console.error("Variable not found in `middleware.ts`. File not changed.");
   }  
 }
 

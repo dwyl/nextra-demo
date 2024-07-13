@@ -33,6 +33,7 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
   - [Run the Tests!](#run-the-tests)
   - [Build It!](#build-it)
   - [_Please_ star the repo! ⭐️](#please-star-the-repo-️)
+  - [Troubleshooting](#troubleshooting)
 
 
 # Why? 🤷‍♀️
@@ -127,10 +128,17 @@ npm i
 
 ### 3. Create Environment Variables
 
-Copy the `.env.local-example` file and create your `.env` file:
+Copy the `.env.local-example` file and create your `.env.local` file:
 
 ```sh
-cp .env.local-example .env
+cp .env.local-example .env.local
+```
+
+Add the necessary environment variables to your `.env.local` file,
+e.g: 
+
+```sh
+
 ```
 
 
@@ -163,3 +171,11 @@ If you find this repo/tutorial useful,
 please star it on GitHub, so that we know! ⭐
 
 Thank you! 🙏
+
+
+## Troubleshooting
+
+```sh
+[auth][error] MissingSecret: Please define a `secret`.. 
+  Read more at https://errors.authjs.dev#missingsecret
+```

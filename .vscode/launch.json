@@ -1,0 +1,55 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node-terminal",
+        "name": "Debug Current TS File (ts-node)",
+        "request": "launch",
+        "command": "npx ts-node -- ${fileBasenameNoExtension}",
+        "cwd": "${fileDirname}"
+      },
+      {
+        "name": "Jest file",
+        "type": "pwa-node",
+        "request": "launch",
+        "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
+        "args": [
+            "${fileBasenameNoExtension}",
+            "--runInBand",
+            "--watch",
+            "--coverage=false",
+            "--no-cache"
+        ],
+        "cwd": "${workspaceRoot}",
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "sourceMaps": true,
+        "windows": {
+            "program": "${workspaceFolder}/node_modules/jest/bin/jest"
+        }
+    },
+      {
+        "name": "Next.js: debug server-side",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "pnpm run dev"
+      },
+      {
+        "name": "Next.js: debug client-side",
+        "type": "chrome",
+        "request": "launch",
+        "url": "http://localhost:3000"
+      },
+      {
+        "name": "Next.js: debug full stack",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "pnpm run dev",
+        "serverReadyAction": {
+          "pattern": "- Local:.+(https?://.+)",
+          "uriFormat": "%s",
+          "action": "debugWithChrome"
+        }
+      }
+    ]
+  }

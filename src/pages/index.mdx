@@ -1,0 +1,86 @@
+import { auth } from "@/src/auth.ts"
+import { useData } from 'nextra/data'
+import Link from 'next/link'
+import { signOut } from "next-auth/react"
+import LoginOrUserInfo from "@/src/components/LoginOrUserInfo"
+
+export async function getServerSideProps(ctx) {
+  const session = await auth(ctx)
+
+return {
+      props: {
+        // We add an `ssg` field to the page props,
+        // which will be provided to the Nextra `useData` hook.
+        ssg: {
+          session
+        }
+      }
+    }
+}
+
+export const Info = () => {
+  // Get the data from SSG, and render it as a component.
+  const { session } = useData()
+  return <LoginOrUserInfo session={session}/>
+}
+
+# Welcome to Nextra Documentation
+
+Welcome to the `Nextra` documentation site! 
+`Nextra` is a modern static site generator 
+optimized for creating high-quality documentation websites with ease. 
+This documentation will guide you through the setup, 
+features, and best practices for using `Nextra`.
+
+---
+
+<Info/>
+
+---
+
+## Getting Started
+
+To get started with Nextra, check out the [About](about) page 
+to learn more about its capabilities and features. 
+If you need any assistance, visit our [Contact](contact) page 
+to find out how to reach us.
+
+Explore the sections below to dive deeper into specific topics:
+- [About Nextra](about)
+- [API Reference](reference_api)
+- [Contact Us](contact)
+
+We hope you find Nextra useful for your documentation needs!
+
+| left   | center |      right |
+| :----- | :----: | ---------: |
+| foo    |  bar   | baz        |
+| banana | apple  | strawberry |
+
+```sh npm2yarn
+npm i -D aws-sdk-mock
+```
+
+Mermaid diagrams work out of the box:
+
+```mermaid
+graph TD;
+subgraph AA [Consumers]
+A[Mobile app];
+B[Web app];
+C[Node.js client];
+end
+subgraph BB [Services]
+E[REST API];
+F[GRPC API];
+G[SOAP API];
+end
+Z[GraphQL API];
+A --> Z;
+B --> Z;
+C --> Z;
+Z --> E;
+Z --> F;
+Z --> G;
+```
+

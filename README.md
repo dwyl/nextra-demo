@@ -138,16 +138,36 @@ Add the necessary environment variables to your `.env.local` file,
 e.g: 
 
 ```sh
+AUTH_SECRET=<YOUR_GENERATED_SECRET>
 
+AUTH_GITHUB_ID=<GITHUB_OAUTH_APPLICATION_ID>
+AUTH_GITHUB_SECRET=<GITHUB_OAUTH_APPLICATION_SECRET>
+
+TEST_PASSWORD=<ANY_PASSWORD_FOR_TESTS_TO_RUN>
 ```
 
+> [!NOTE]
+>
+> Check [tutorial.md](./tutorial.md#2-add-authentication-)
+> to learn where to get these environment variables.
 
 
 ### 4. Run the App!
 
+Open your web browser in http://localhost:3000
+and run in dev mode by typing this in the terminal.
 
-Open your web browser to:
+```sh
+npm run dev
+```
 
+If you wish to run in production mode,
+make sure to run the `build` script first and then start.
+
+```sh
+npm run build
+npm start
+```
 
 
 ## Run the Tests!
@@ -155,7 +175,15 @@ Open your web browser to:
 Run the tests with the following command:
 
 ```sh
+npm run test
+```
 
+Alternatively, you can run end-to-end tests
+(which use [Playwright](https://playwright.dev/))
+by running the following command:
+
+```sh
+npm run e2e:test
 ```
 
 ## Build It!
@@ -175,7 +203,17 @@ Thank you! 🙏
 
 ## Troubleshooting
 
+### I'm getting an error pertaining a missing secret
+
+You may have encountered the following error.
+
 ```sh
 [auth][error] MissingSecret: Please define a `secret`.. 
   Read more at https://errors.authjs.dev#missingsecret
 ```
+
+It means that you're missing a secret
+from `auth.js`.
+Visit https://authjs.dev/reference/core/errors#missingsecret
+and create a secret and place it in the `.env` file locally
+and you should be good to go!

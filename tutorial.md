@@ -35,8 +35,7 @@
     - [7.4 Rendering links inside `sidebar`](#74-rendering-links-inside-sidebar)
       - [7.4.1 Understanding how directory items are passed down to the `sidebar`](#741-understanding-how-directory-items-are-passed-down-to-the-sidebar)
       - [7.4.2 Conditionally rendering links in `Menu` inside the `sidebar`](#742-conditionally-rendering-links-in-menu-inside-the-sidebar)
-- [Change theme](#change-theme)
-- [Zones](#zones)
+- [Star the repo!](#star-the-repo)
 
 > [!TIP]
 >
@@ -2384,28 +2383,10 @@ which is different to what this directory requires.
 
 Great job! 🎉
 
-
-
-# Change theme
-
-- custom theme is the only option
-- although you can change some aspects of the sidebar 
-  https://nextra.site/docs/docs-theme/theme-configuration#customize-sidebar-content 
-  you can't (yet) do it on the navbar:
-  [nextra#2799](https://github.com/shuding/nextra/discussions/2799).
-  Either way, the way Nextra does it doesn't allow us 
-  to have access to the authorization and change the display accordingly. 
-  We need to go deeper.
-
-# Zones 
-
-See:
-[nextra#93](https://github.com/shuding/nextra/discussions/93)
-More to come soon! 
-
+# Star the repo! 
 
 Thanks for learning with us!
 If you find it useful, 
 please give the repo a star! ⭐️
 
-[![HitCount](https://hits.dwyl.com/dwyl/nextra-demo-tutorial.svg?style=flat-square)](https://hits.dwyl.com/dwyl/nextra-demo)
+[![HitCount](https://hits.dwyl.com/dwyl/nextra-demo.svg?style=flat-square)](https://hits.dwyl.com/dwyl/nextra-demo)

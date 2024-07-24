@@ -140,3 +140,6 @@ dist
 /blob-report/
 /playwright/.cache/
 /.swc
+
+# Content layer
+.contentlayer

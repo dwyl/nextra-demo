@@ -5,7 +5,6 @@ const withNextra = require("nextra")({
   themeConfig: "./theme.config.tsx",
   defaultShowCopyCode: true
 });
-const { withContentlayer } = require('next-contentlayer')
-
+const { withContentlayer } = require('next-contentlayer2');
 
 module.exports = withPlugins([withNextra, withContentlayer]);

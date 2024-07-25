@@ -10,8 +10,9 @@
     "e2e:test:show-report": "npx monocart show-report ./e2e-test-results/monocart-report.html",
     "test": "jest --runInBand",
     "types:check": "tsc --noEmit",
-    "link:check": "pnpm run contentlayer && node ./scripts/link-check.mjs",
-    "contentlayer": "contentlayer2 build --verbose"
+    "lint:link-check-all": "concurrently -n start_server,link_check \"pnpm run dev\" \"pnpm lint:contentlayer-build && pnpm lint:link-check\" -k",
+    "lint:link-check": "node ./scripts/link-check.mjs",
+    "lint:contentlayer-build": "contentlayer2 build --verbose"
   },
   "dependencies": {
     "next": "^14.2.4",
@@ -29,6 +30,7 @@
     "@types/jest": "^29.5.12",
     "@types/node": "20.14.5",
     "autoprefixer": "^10.4.19",
+    "concurrently": "^8.0.0",
     "contentlayer2": "^0.5.0",
     "dotenv": "^16.4.5",
     "fast-glob": "^3.3.2",

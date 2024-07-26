@@ -2389,4 +2389,4 @@ Thanks for learning with us!
 If you find it useful, 
 please give the repo a star! ⭐️
 
-[![HitCount](https://hits.dwyl.com/dwyl/nextra-demo.svg?style=flat-square)](https://hits.dwyl.com/dwyl/nextra-demo)
+[![HitCount](https://hits.dwyl.com/dwyl/nextra-demo-tutorial.svg?style=flat-square)](https://hits.dwyl.com/dwyl/nextra-demo)

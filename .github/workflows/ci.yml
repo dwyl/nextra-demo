@@ -27,7 +27,7 @@ jobs:
     - name: Running `markdownlint-cli2-action`
       uses: DavidAnson/markdownlint-cli2-action@v16.0.0
       with:
-        config: '.markdownlint-cli2.mjs'
+        config: './.markdownlint-cli2.mjs'
 
     # Run script to check for dead links
     - name: Checking for dead links

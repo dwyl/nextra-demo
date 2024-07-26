@@ -12,15 +12,15 @@ const createJestConfig = nextJest({
 });
 
 const config: Config = {
+  setupFiles: ["./jest.polyfills.js"],
+
   collectCoverage: true,
-  collectCoverageFrom: ["src/**/*.{js,jsx,ts,tsx}", "!<rootDir>/node_modules/"],
+  collectCoverageFrom: ["src/**/*.{js,jsx,ts,tsx}", "scripts/*.{mjs,js,jsx,ts,tsx}", "!<rootDir>/node_modules/"],
   coverageDirectory: "coverage",
   coveragePathIgnorePatterns: ["/node_modules/"],
   coverageProvider: "v8",
 
-  moduleDirectories: [
-    "node_modules"
-  ],
+  moduleDirectories: ["node_modules"],
   modulePathIgnorePatterns: [
     // Testing auth with `next-auth` complains (consider switching to Vitest)
     // Doesn't seem to have a proper solution. See https://github.com/nextauthjs/next-auth/issues/4198.
@@ -36,10 +36,11 @@ const config: Config = {
     "src/pages/_app.ts",
 
     // The `app` folder is only used to export the default handlers from `next-auth`.
-    "src/app"
+    "src/app",
   ],
   moduleNameMapper: {
     "next-auth/(.*)": "<rootDir>/node_modules/next-auth/$1",
+    "^uuid$": require.resolve("uuid"), // See https://github.com/uuidjs/uuid/issues/451#issuecomment-1377066303.
   },
 
   testEnvironment: "jsdom",

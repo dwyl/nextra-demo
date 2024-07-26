@@ -24,7 +24,7 @@ jobs:
       run: pnpm install --no-frozen-lockfile
 
     # Run `markdownlint-cli2` to lint markdown files
-    - name: Running `markdownlint-cli2-action`
+    - name: Running `markdownlint-cli2`
       run: pnpm run lint:check-markdown
 
     # Run script to check for dead links

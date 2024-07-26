@@ -1,9 +1,9 @@
 # Person API
 
-The `Person` API allows you to manage personal data 
-within your Nextra-powered documentation site. 
-This endpoint provides functionalities to create, retrieve, update, 
-and delete `person` information, making it a crucial component 
+The `Person` API allows you to manage personal data
+within your Nextra-powered documentation site.
+This endpoint provides functionalities to create, retrieve, update,
+and delete `person` information, making it a crucial component
 for any personalized applications.
 
 ## Endpoints
@@ -13,14 +13,16 @@ for any personalized applications.
 Retrieve a list of all persons (people).
 
 **Endpoint:**
-```
+
+```sh
 GET /api/persons
 ```
 
 **Response:**
 
-The response includes a list of `person` objects, 
+The response includes a list of `person` objects,
 each containing the following fields:
+
 - `id`: The unique identifier for the `person`.
 - `name`: The name of the `person`.
 - `email`: The email address the `person` provided.
@@ -50,13 +52,15 @@ each containing the following fields:
 Add a new `person` to the system.
 
 **Endpoint:**
-```
+
+```sh
 POST /api/person
 ```
 
 **Request Body:**
 
 The request body should include the following fields:
+
 - `name` (required): The name of the `person`.
 - `email` (required): The email address of the `person`.
 - `role` (optional): The role of the `person`. Default is `viewer`.
@@ -89,13 +93,15 @@ The response includes the created `person` object.
 Modify an existing `person` information.
 
 **Endpoint:**
-```
+
+```sh
 PUT /api/person/:id
 ```
 
 **Request Body:**
 
 The request body can include any of the following fields to update:
+
 - `name` (optional): The name of the `person`.
 - `email` (optional): The email address of the `person`.
 - `role` (optional): The role of the `person`.
@@ -128,7 +134,8 @@ The response includes the updated `person` object.
 Remove a `person` from the system.
 
 **Endpoint:**
-```
+
+```sh
 DELETE /api/person/:id
 ```
 
@@ -144,10 +151,10 @@ The response includes a confirmation message.
 
 ## Summary
 
-The `person` API provides essential operations 
-for managing people within your `Nextra` documentation site. 
-Whether you need to add a new `person`, update or remove existing ones, 
-these endpoints offer the flexibility 
-to handle all person-related tasks efficiently. 
-For more information on other available APIs, 
+The `person` API provides essential operations
+for managing people within your `Nextra` documentation site.
+Whether you need to add a new `person`, update or remove existing ones,
+these endpoints offer the flexibility
+to handle all person-related tasks efficiently.
+For more information on other available APIs,
 refer back to the [API Reference](/index).

@@ -11,9 +11,7 @@
     "test": "jest --runInBand",
     "types:check": "tsc --noEmit",
     "lint:fix-markdown": "markdownlint-cli2 --fix",
-    "lint:link-check-all": "concurrently -n start_server,link_check \"pnpm run dev\" \"pnpm lint:contentlayer-build && pnpm lint:link-check\" -k",
-    "lint:link-check": "node ./scripts/link-check.mjs",
-    "lint:contentlayer-build": "contentlayer2 build --verbose"
+    "lint:check-external-links": "contentlayer2 build --verbose && node ./scripts/link-check.mjs"
   },
   "dependencies": {
     "next": "^14.2.4",
@@ -25,13 +23,13 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@actions/core": "^1.10.1",
     "@playwright/test": "^1.44.1",
     "@testing-library/jest-dom": "^6.4.6",
     "@testing-library/react": "^16.0.0",
     "@types/jest": "^29.5.12",
     "@types/node": "20.14.5",
     "autoprefixer": "^10.4.19",
-    "concurrently": "^8.0.0",
     "contentlayer2": "^0.5.0",
     "dotenv": "^16.4.5",
     "fast-glob": "^3.3.2",

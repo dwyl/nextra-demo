@@ -11,6 +11,7 @@
     "test": "jest --runInBand",
     "types:check": "tsc --noEmit",
     "lint:fix-markdown": "markdownlint-cli2 --fix",
+    "lint:check-markdown": "markdownlint-cli2",
     "lint:check-external-links": "contentlayer2 build --verbose && node ./scripts/link-check.mjs"
   },
   "dependencies": {

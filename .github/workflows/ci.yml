@@ -25,9 +25,7 @@ jobs:
 
     # Run `markdownlint-cli2` to lint markdown files
     - name: Running `markdownlint-cli2-action`
-      uses: DavidAnson/markdownlint-cli2-action@v16.0.0
-      with:
-        config: './.markdownlint-cli2.mjs'
+      run: pnpm run lint:check-markdown
 
     # Run script to check for dead links
     - name: Checking for dead links

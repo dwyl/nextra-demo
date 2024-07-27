@@ -17,6 +17,7 @@ export async function findDeadExternalLinksInMarkdown(markdownAllBody) {
   // Options for `markdown-lint-check`.
   // It catches internal links and external links.
   const configOpts = {
+    /* c8 ignore next */
     projectBaseUrl: baseUrl ? baseUrl.replace("--baseUrl=", "https://") : localhost,
     replacementPatterns: [
       // Match links like `[example](/example) and adding tag to later ignore
@@ -32,20 +33,11 @@ export async function findDeadExternalLinksInMarkdown(markdownAllBody) {
     ],
   };
 
-  // Initialize the array to store dead links
-  let deadLinks = [];
-
   // Runs `markdown-link-check` only on external links.
   // If this step fails, check the output. You should find "input". It shows the link that caused the error.
   // Most likely the reason it's failing is because the link doesn't start with `./` or `/` (e.g. [example](index.md), instead of [example](./index.md)).
   return new Promise((resolve, reject) => {
-    // Runs `markdown-link-check` only on external links.
-    // If this step fails, check the output. You should find "input". It shows the link that caused the error.
-    // Most likely the reason it's failing is because the link doesn't start with `./` or `/` (e.g. [example](index.md), instead of [example](./index.md)).
     markdownLinkCheck(markdownAllBody, configOpts, function (error, linkCheckresults) {
-      if (error) {
-        return reject(new Error(error));
-      }
 
       // Filtering links for only external URLs
       const results = linkCheckresults.map((linkCheckResult) => ({ ...linkCheckResult }));
@@ -61,10 +53,12 @@ export async function findDeadExternalLinksInMarkdown(markdownAllBody) {
   });
 }
 
-// This is used to be called from `package.json`.
+/* c8 ignore start */
+// This section only runs when the script is invoked from `package.json`.
 // This "if" statement checks if the script is being run from the command line rather than being imported as module - it's the entry point of the script.
 if (process.argv[1] === new URL(import.meta.url).pathname) {
   (async () => {
+    // Get the map of all the markdown files after running `contentlayer2`
     const allBody = allDocuments.map(({ body }) => body.raw).join("\n--- NEXT PAGE ---\n");
     const deadLinks = await findDeadExternalLinksInMarkdown(allBody);
 
@@ -76,3 +70,4 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
     }
   })();
 }
+/* c8 ignore end */

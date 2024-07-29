@@ -1,5 +1,6 @@
 import { defineDocumentType, makeSource } from 'contentlayer2/source-files'
 
+// This function computes the fields to add to the `Page` document type
 const computedFieldsPage = {
   slug: {
     type: 'string',
@@ -7,12 +8,14 @@ const computedFieldsPage = {
   },
 }
 
+// Define the document type for a `Page` (an `.mdx` file).
 export const Page = defineDocumentType(() => ({
   name: 'Page',
   filePathPattern: `**/*.mdx`,
   computedFieldsPage,
 }))
 
+// Define the document type for each `_meta.json` file
 export const MetaJson = defineDocumentType(() => ({
   name: 'MetaJson',
   filePathPattern: `**/_meta.json`,

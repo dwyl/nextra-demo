@@ -35,8 +35,12 @@
     - [7.4 Rendering links inside `sidebar`](#74-rendering-links-inside-sidebar)
       - [7.4.1 Understanding how directory items are passed down to the `sidebar`](#741-understanding-how-directory-items-are-passed-down-to-the-sidebar)
       - [7.4.2 Conditionally rendering links in `Menu` inside the `sidebar`](#742-conditionally-rendering-links-in-menu-inside-the-sidebar)
-- [Change theme](#change-theme)
-- [Zones](#zones)
+  - [8. Linting the `Markdown` files](#8-linting-the-markdown-files)
+    - [8.1 Installing dependencies](#81-installing-dependencies)
+    - [8.2 Checking external links](#82-checking-external-links)
+    - [8.3 Linting and checking for broken internal relative links](#83-linting-and-checking-for-broken-internal-relative-links)
+    - [8.4 Adding to CI](#84-adding-to-ci)
+- [Star the repo!](#star-the-repo)
 
 > [!TIP]
 >
@@ -2385,27 +2389,509 @@ which is different to what this directory requires.
 Great job! 🎉
 
 
+## 8. Linting the `Markdown` files
 
-# Change theme
+[Maintaining a consistent style guide](https://learn.microsoft.com/en-us/style-guide/welcome/)
+is critical for documentation to be easily accessible.
+This _saves time for the person reading it_
+by making it more predictable to navigate.
 
-- custom theme is the only option
-- although you can change some aspects of the sidebar 
-  https://nextra.site/docs/docs-theme/theme-configuration#customize-sidebar-content 
-  you can't (yet) do it on the navbar:
-  [nextra#2799](https://github.com/shuding/nextra/discussions/2799).
-  Either way, the way Nextra does it doesn't allow us 
-  to have access to the authorization and change the display accordingly. 
-  We need to go deeper.
+With this in mind,
+it is a good idea to add
+**automatic linting** to our documentation `.mdx` files.
 
-# Zones 
+In this section, we'll focus on three things:
+- adding a script to check if any external URLs are dead or alive.
+- linting the `.mdx` files.
+- checking if relative links in files are valid.
 
-See:
-[nextra#93](https://github.com/shuding/nextra/discussions/93)
-More to come soon! 
+These are extremely useful to maintain consistency
+and 
 
+[Maintaining a consistent style guide](https://learn.microsoft.com/en-us/style-guide/welcome/) 
+is crucial for ensuring that documentation is easily accessible.
+This approach not only enhances _readability_ 
+but also _saves time_ for readers by making the content more predictable and easier to navigate.
+
+To achieve this,
+incorporating automatic linting into our documentation `.mdx` files is a smart move.
+
+In this section, we will focus on three key tasks:
+
+- **adding a acript to verify external URLs:**
+This script will check if any external links are dead or alive,
+ensuring that all references are up-to-date and functional.
+
+- **linting the `.mdx` files:**
+Implementing linting tools will help maintain the consistency and quality of our Markdown files
+by automatically detecting and fixing common formatting pitfalls.
+
+- **validating relative links:**
+We will also check if the relative links within the files are valid,
+preventing broken links and enhancing the user experience.
+
+These steps are instrumental in maintaining a high standard of documentation quality and consistency.
+Are you ready to get started?
+Let's go! 🏃‍♂️
+
+
+### 8.1 Installing dependencies
+
+Let's start by installing some dependencies.
+Run the following commands.
+
+```sh
+pnpm install -w --saveDev @actions/core contentlayer2 next-contentlayer2 markdown-link-check markdownlint-cli2 markdownlint-rule-relative-links
+pnpm install -w next-compose-plugins
+```
+
+- [**`next-compose-plugins`**](https://github.com/cyrilwanner/next-compose-plugins)
+makes it easier to add plugins to our `Next.js` application.
+- [**`contentlayer2`**](https://github.com/timlrx/contentlayer2)
+converts the content of the site into type-safe JSON data.
+This will be used to see the contents of the `.mdx` files
+to find URLs, internal or external.
+It is a maintained fork of the original `contentlayer`,
+which maintenance efforts have been halted
+(see https://github.com/contentlayerdev/contentlayer/issues/651#issuecomment-2030335434
+for more information).
+- **`next-contentlayer2`** is an adapter of `contentlayer2`
+to `Next.js` projects.
+- [**`markdown-link-check`**](https://github.com/tcort/markdown-link-check)
+extracts links from Markdown texts
+and checks whether the link is alive (HTTP Code `200`)
+or dead.
+It also checks `mailto:` links.
+This will be used solely for external and e-mail links.
+- [**`markdownlint-cli2`**](https://github.com/DavidAnson/markdownlint-cli2)
+is the successor of the original `markdownlint-cli`,
+a statis analysis tool to enforce standards and consistency for Markdown files.
+You can file the linting rules used in
+https://github.com/DavidAnson/markdownlint#rules--aliases.
+- [**`markdownlint-rule-relative-links`**](https://github.com/theoludwig/markdownlint-rule-relative-links)
+is a custom `markdownlint` rule to validate relative links.
+It will be used to check for internal/relative links between Markdown files.
+- [**`@actions/core`**](https://github.com/actions/toolkit/tree/main/packages/core)
+are a collection of functions for Github Actions.
+Because we want to employ these steps in our Github Actions,
+this will be used to mark as a step as `failed`
+in case linting fails.
+
+Now we're ready to start implementing these features!
+
+
+### 8.2 Checking external links
+
+Let's start with arguably the "hardest" feature to implement.
+We're going to scour the Markdown files for external links
+and then check if they are alive or not.
+
+First, head over to `next.config.js`.
+We are going to be adding a `contentlayer2` plugin
+so it can correctly get the site content.
+
+Head over to the file and use `withPlugins`
+from `next-compose-plugin` to make it easy to add other plugins.
+We are adding the `withContentLayer` plugin to our app.
+
+```js
+// next.config.js
+
+
+const withPlugins = require('next-compose-plugins'); // import this
+const { withContentlayer } = require('next-contentlayer2'); //import this
+const withNextra = require("nextra")({
+  theme: "./theme/src/index.tsx",
+  themeConfig: "./theme.config.tsx",
+  defaultShowCopyCode: true
+});
+
+// Use `withPlugins` to compose the plugins and add the `withContentLayer` plugin we've imported
+module.exports = withPlugins([withNextra, withContentlayer]);
+```
+
+Next, let's change our `tsconfig.json`
+and add a `baseUrl` and a path to `path` to it.
+This will make it so `contentlayer` is accessible in our script.
+
+```json
+// tsconfig.json
+
+// ...
+"compilerOptions": {
+    // ...
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "contentlayer/generated": ["./.contentlayer/generated"]
+    }
+}
+// ...
+```
+
+Now, we need to define the configuration for `contentlayer2`.
+We are going to define two documents to match:
+- the `.mdx` pages.
+- the `_meta.json` files.
+
+`contentlayer2` needs to be aware of these
+so they can properly construct the site contents.
+
+For this, in the root of the project,
+create a file called `contentlayer.config.js`.
+
+```js
+// contentlayer.config.js
+
+import { defineDocumentType, makeSource } from 'contentlayer2/source-files'
+
+const computedFieldsPage = {
+  slug: {
+    type: 'string',
+    resolve: (doc) => doc._raw.sourceFileName.replace(/\.mdx$/, ''),
+  },
+}
+
+export const Page = defineDocumentType(() => ({
+  name: 'Page',
+  filePathPattern: `**/*.mdx`,
+  computedFieldsPage,
+}))
+
+export const MetaJson = defineDocumentType(() => ({
+  name: 'MetaJson',
+  filePathPattern: `**/_meta.json`,
+}))
+
+export default makeSource({
+  contentDirPath: 'src/pages',
+  documentTypes: [Page],
+  onUnknownDocuments: 'skip-ignore'
+})
+```
+
+As you can see,
+we are using `defineDocumentType` 
+to define a type of document expected to find in the docs.
+In our case,
+we define `Page` for `.mdx` pages
+and `MetaJson` for `_meta.json` files.
+We set the `contentDirPath` to `src/pages`,
+which is the directory where we want `contentlayer2` to run.
+
+Now we're ready to create our script!
+For this,
+create a folder `scripts` in the root of the project.
+Inside this folder,
+add a file called `link-check.mjs`.
+This will be our script!
+
+```mjs
+import core from "@actions/core";
+import markdownLinkCheck from "markdown-link-check";
+import { allDocuments } from "../.contentlayer/generated/index.mjs";
+
+// String to tag internal links to be ignored when checking in `markdown-lint-check`
+const ignoreURLTag = "#ignoreURL#";
+const localhost = "http://localhost:3000";
+const baseUrl = process.argv.find((arg) => arg.includes("--baseUrl"));
+
+/**
+ * This function checks external links that are present in the markdown files.
+ * It checks if they're alive or dead using `markdown-lint-check`.
+ * @param {string} markdownAllBody all of the markdowns text
+ * @returns array of dead links
+ */
+export async function findDeadExternalLinksInMarkdown(markdownAllBody) {
+  // Options for `markdown-lint-check`.
+  // It catches internal links and external links.
+  const configOpts = {
+    projectBaseUrl: baseUrl ? baseUrl.replace("--baseUrl=", "https://") : localhost,
+    replacementPatterns: [
+      // Match links like `[example](/example) and adding tag to later ignore
+      {
+        pattern: "^/",
+        replacement: `${ignoreURLTag}{{BASEURL}}/`,
+      },
+      // Match links like `[example](./example) and adding tag to later ignore
+      {
+        pattern: "^./",
+        replacement: `${ignoreURLTag}{{BASEURL}}/`,
+      },
+    ],
+  };
+
+  // Runs `markdown-link-check` only on external links.
+  // If this step fails, check the output. You should find "input". It shows the link that caused the error.
+  // Most likely the reason it's failing is because the link doesn't start with `./` or `/` (e.g. [example](index.md), instead of [example](./index.md)).
+  return new Promise((resolve, reject) => {
+    markdownLinkCheck(markdownAllBody, configOpts, function (error, linkCheckresults) {
+
+      // Filtering links for only external URLs
+      const results = linkCheckresults.map((linkCheckResult) => ({ ...linkCheckResult }));
+      const filteredResults = results.filter(function (item) {
+        return !item.link.includes(ignoreURLTag);
+      });
+
+      // Collecting dead links
+      const deadLinks = filteredResults.filter(result => result.status === "dead").map(result => result.link);
+
+      resolve(deadLinks);
+    });
+  });
+}
+
+// This section only runs when the script is invoked from `package.json`.
+// This "if" statement checks if the script is being run from the command line rather than being imported as module - it's the entry point of the script.
+if (process.argv[1] === new URL(import.meta.url).pathname) {
+  (async () => {
+    // Get the map of all the markdown files after running `contentlayer2`
+    const allBody = allDocuments.map(({ body }) => body.raw).join("\n--- NEXT PAGE ---\n");
+    const deadLinks = await findDeadExternalLinksInMarkdown(allBody);
+
+    if (deadLinks.length > 0) {
+      console.error("Dead links found:", deadLinks);
+      core.setFailed();
+    } else {
+      console.log("All links are valid! 🙌");
+    }
+  })();
+}
+```
+
+Let's go over the changes we've made!
+- we create a function **`findDeadExternalLinksInMarkdown()`**
+that is responsible for finding all the external links given a markdown text.
+  - we first initialize `configOpts`,
+where we define the parameters for `markdownLintCheck`, `markdown-lint-check`'s main function.
+In this configuration,
+we define the base URL of the project and, most importantly,
+the patterns to replace internal links we find.
+For this, we define a tag (a string) that we'll later use to filter out these internal links,
+leaving only the external links inside our `.mdx` files.
+  - we return a `Promise` which calls `markdownLintCheck`,
+which receives the body of all the Markdown files and the configuration we've just defined.
+Inside the callback function,
+we filter out the internal links and return an array of dead links.
+- we added an `if` statement that is only invoked
+when the script is called from the command line.
+We do this to make it easier to test with `Jest`.
+In here, we call the function we've just created (`findDeadExternalLinksInMarkdown()`)
+and provide the text of all the `.mdx` files.
+We get this text after `contentlayer2` parses through our site.
+Inside this `if` statement,
+we call `core.setFailed();` in case anything goes wrong,
+so the Github Actions workflow fails gracefully.
+
+And that's it!
+All that we need to do call this script inside our `package.json`!
+Simply head over there and,
+inside the `scripts` section,
+add the following line.
+
+```json
+"lint:check-external-links": "contentlayer2 build --verbose && node scripts/link-check.mjs"
+```
+
+In here,
+we call `contentlayer2` to build the content of the `.mdx` files
+that is later used inside `link-check.mjs`.
+
+> [!IMPORTANT]
+>
+> `contentlayer2` generates the data inside a folder called `.contentlayer`.
+> Add it to your `.gitignore` so it isn't pushed to version control!
+
+And that's it!
+All you need to do now is _run the script_!
+
+```sh
+pnpm run lint:check-external-links
+```
+
+Depending on the links found in your documentation,
+the console will log the dead links
+or if everything is valid!
+
+> [!IMPORTANT]
+>
+> If you have links in the following format `[link](invalid)`,
+> where the link is internal but does not have `/` or `./` in the beginning,
+> this script will fail because of `markdown-lint-check` not being able
+> to create an URL from `invalid`.
+>
+> You will be able to see the culprit index under the `input` property
+> in the crash log.
+>
+> ```sh
+> TypeError: Invalid URL
+>     at new URL (node:internal/url:797:36)
+>     ...
+>   code: 'ERR_INVALID_URL',
+>   input: 'invalid'
+> ```
+
+
+### 8.3 Linting and checking for broken internal relative links
+
+Now let's lint our `.mdx` files
+and check if the relative links are properly set up!
+All we need to do is add configuration
+to the `markdownlint-cli2` package we've installed.
+This package will lint the `.mdx` files
+according to rules we've defined.
+We are going to use the default ones,
+**plus** the `markdownlint-rule-relative-links` one we've installed.
+
+For this,
+in the root of the project,
+add a file called `.markdownlint-cli2.mjs`.
+
+```mjs
+// .markdownlint-cli2.mjs
+
+// @ts-check
+
+const options = {
+  config: {
+    default: true,
+    "relative-links": true,
+    MD041: false,
+    MD013: false,
+    "no-inline-html": {
+      // Add React components we want to allow here
+      allowed_elements: ["LoginOrUserInfo", "Info"],
+    },
+  },
+  globs: ["src/pages/**/*.{md,mdx}"],
+  ignores: ["**/node_modules", "theme", "scripts"],
+  customRules: ["markdownlint-rule-relative-links"],
+};
+
+export default options;
+```
+
+- we are using the `default` options,
+with some overrides so it works best with `.mdx` files.
+We've disabled [`MD041`](https://github.com/DavidAnson/markdownlint/blob/main/doc/md041.md)
+and [`MD013`](https://github.com/DavidAnson/markdownlint/blob/main/doc/md013.md).
+In addition to this,
+we only allow specific inline HTML components
+in our `.mdx` files,
+those being `LoginOrUserInfo` and `Info`
+components we've defined for the authentication flow.
+- inside `globs`,
+we add the paths of the `.mdx` files we want to lint.
+- in `ignores`,
+we define paths to ignore the linting.
+- in `customRules`,
+we add additional, third-party custom rules.
+In here,
+we use the `markdownlint-rule-relative-links` we've installed
+to check the relative internal links.
+
+And that's the hart part done!
+Because `markdownlint-cli2` uses this config path by default,
+all that's left is calling it in our `package.json`.
+Add the following scripts to it.
+
+```json
+    "lint:fix-markdown": "markdownlint-cli2 --fix",
+    "lint:check-markdown": "markdownlint-cli2",
+```
+
+- **`lint:fix-markdown`** is meant to be used in development mode.
+It parses the `.mdx` files and attempts to fix any issues.
+- **`lint:check-markdown`** is meant to be used in CI (Github Actions).
+
+And you're done! 🎉
+Awesome work!
+
+You can run the script try and fix any issues you may have in your files.
+
+```sh
+pnpm run lint:fix-markdown
+```
+
+The console will log any issues that arise.
+
+
+### 8.4 Adding to CI
+
+Because we've automated the linting,
+it's simple for us to use in our Github Actions workflow!
+
+```yml
+name: Build & Test
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  ci:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+
+    # Setup environment (Node and pnpm)
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - uses: pnpm/action-setup@v4
+      with:
+        version: latest
+
+    # Install dependencies
+    - name: Install dependencies
+      run: pnpm install --no-frozen-lockfile
+
+    # ADD THESE LINES ----------------------------------------
+    # Run `markdownlint-cli2` to lint markdown files
+    - name: Running `markdownlint-cli2`
+      run: pnpm run lint:check-markdown
+
+    # Run script to check for dead links
+    - name: Checking for dead links
+      run: pnpm run lint:check-external-links
+    # ADD THESE LINES ----------------------------------------
+
+    # Run build
+    - name: Build Next.js app
+      run: pnpm run build
+
+    # Run unit tests
+    - name: Running unit tests
+      run: pnpm run test
+
+    # Run E2E tests
+    - name: Install Playwright Browsers
+      run: pnpm exec playwright install --with-deps
+    - name: Run Playwright tests
+      run: pnpm exec playwright test
+      env:
+        AUTH_SECRET: some_nextauth_secret
+        TEST_PASSWORD: password
+
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
+```
+
+As you can see,
+we simply call the scripts from our `package.json` file!
+
+Simple as! 😃
+
+
+# Star the repo!
 
 Thanks for learning with us!
-If you find it useful, 
+If you find it useful,
 please give the repo a star! ⭐️
 
 [![HitCount](https://hits.dwyl.com/dwyl/nextra-demo-tutorial.svg?style=flat-square)](https://hits.dwyl.com/dwyl/nextra-demo)

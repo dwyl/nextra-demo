@@ -26,14 +26,16 @@ https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
 - [What? ✨](#what-)
 - [Who? 👥](#who-)
 - [How? 👩‍💻](#how-)
+  - [Run the _Finished_ Project](#run-the-finished-project)
     - [1. Clone the Project](#1-clone-the-project)
     - [2. Install Dependencies](#2-install-dependencies)
     - [3. Create Environment Variables](#3-create-environment-variables)
     - [4. Run the App!](#4-run-the-app)
   - [Run the Tests!](#run-the-tests)
   - [Build It!](#build-it)
-  - [_Please_ star the repo! ⭐️](#please-star-the-repo-️)
-  - [Troubleshooting](#troubleshooting)
+- [_Please_ star the repo! ⭐️](#please-star-the-repo-️)
+- [Troubleshooting](#troubleshooting)
+  - [I'm getting an error pertaining a missing secret](#im-getting-an-error-pertaining-a-missing-secret)
 
 
 # Why? 🤷‍♀️
@@ -107,7 +109,7 @@ or just want to discuss this further,
 
 Ready? Let's go! 🚀
 
-## Run the _Finished_ Project
+## Run the _Finished_ Project
 
 ### 1. Clone the Project
 
@@ -193,7 +195,7 @@ See:
 [tutorial.md](./tutorial.md)
 
 
-## _Please_ star the repo! ⭐️
+# _Please_ star the repo! ⭐️
 
 If you find this repo/tutorial useful,
 please star it on GitHub, so that we know! ⭐
@@ -201,9 +203,9 @@ please star it on GitHub, so that we know! ⭐
 Thank you! 🙏
 
 
-## Troubleshooting
+# Troubleshooting
 
-### I'm getting an error pertaining a missing secret
+## I'm getting an error pertaining a missing secret
 
 You may have encountered the following error.
 

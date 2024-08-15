@@ -139,3 +139,81 @@ head over to https://github.com/dwyl/learn-analytics.
 > check https://github.com/dwyl/learn-analytics/tree/main/plausible#3-optional-monitoring-a-nextjs-website out.
 
 
+We're going to install https://github.com/4lejandrito/next-plausible
+to connect to our `Plausible` instance.
+This library makes it easy for us to integrate
+and create custom events to send over to our self-hosted `Plausible` server.
+
+Install it by running:
+
+```sh
+pnpm add next-plausible -w
+```
+
+Now, we need to wrap our app with `<PlausibleProvider>`,
+at the top level of our application.
+This is made inside `/src/pages/_app.tsx`.
+
+```tsx
+// These styles apply to every route in the application
+import "@/src/globals.css";
+import type { AppProps } from "next/app";
+import { SessionProvider } from "next-auth/react";
+import PlausibleProvider from "next-plausible";
+
+export default function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
+  return (
+    <PlausibleProvider domain="nextra-demo-seven.vercel.app" customDomain="https://analytics.dwyl.com" selfHosted>
+      <SessionProvider session={session}>
+        <Component {...pageProps} />
+      </SessionProvider>
+    </PlausibleProvider>
+  );
+}
+```
+
+As you can see, `<PlausibleProvider>` has a few properties that we need to set.
+You can find the full list in https://github.com/4lejandrito/next-plausible#plausibleprovider-props.
+- **`domain`** is the domain of the site we want to monitor.
+It should be the same name of the site we've defined
+when we set up our `Plausible` server
+and is the same domain where our `Nextra` site is deployed;
+
+- **`selfHosted`** has to be set to `true` if we're self-hosting `Plausible`.
+Otherwise, we'll get a `404` when the website we're monitoring
+requests the analytics script.
+
+- **`customDomain`** is the custom domain where the `Plausible` analytics script
+(that the browser page downloads so our `Plausible` instance can gather analytics)
+is being served.
+This must be defined in self-hosted applications.
+It's the domain of where our `Plausible CE` instance is deployed.
+
+And that's it!
+We've integrated `Plausible` with our app!
+
+When we visit our `Plausible` instance,
+we'll see our visitors being shown!
+
+<p align="center">
+  <img width='800' src="https://github.com/user-attachments/assets/be516048-0eb3-4099-9f31-80e7313c2a6c"/>
+</p>
+
+> [!NOTE]
+>
+> In the picture above,
+> we're testing on `localhost`,
+> so we tweaked the configuration of the `<PlausibleProvider>` for it to work on `localhost`.
+>
+> This is just to inform you that when you're deploying,
+> you should stick to what's been mentioned above 😊.
+
+
+## 3. What's more...?
+
+We've just *scratched the surface* when it comes to `Plausible` with `Nextra`/`Next.js`!
+We've documented *more* features of `next-plausible` in
+https://github.com/dwyl/learn-analytics/tree/main/plausible#3-optional-monitoring-a-nextjs-website
+where you can learn about **custom events** and **proxying the analytics script served by your `Plausible` server**.
+
+We urge you to check it out to continue on your journey!

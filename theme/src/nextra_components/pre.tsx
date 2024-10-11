@@ -1,44 +1,71 @@
 import cn from 'clsx'
-import type { ComponentProps, ReactElement } from 'react'
-import { useCallback, useRef } from 'react'
-import { WordWrapIcon } from '../nextra_icons'
-import { Button } from './button'
-import { CopyToClipboard } from './copy-to-clipboard'
+import type { ComponentProps, FC, ReactElement } from 'react'
+import { useRef } from 'react'
+import { WordWrapIcon } from '../nextra_icons/index.js'
+import { Button, classes } from './button.js'
+import { CopyToClipboard } from './copy-to-clipboard.js'
 
-export const Pre = ({
+function toggleWordWrap() {
+  const htmlDataset = document.documentElement.dataset
+  const hasWordWrap = 'nextraWordWrap' in htmlDataset
+  if (hasWordWrap) {
+    delete htmlDataset.nextraWordWrap
+  } else {
+    htmlDataset.nextraWordWrap = ''
+  }
+}
+
+export function Pre({
   children,
   className,
-  hasCopyCode,
-  filename,
+  'data-filename': filename,
+  'data-copy': copy,
+  'data-language': _language,
+  'data-word-wrap': hasWordWrap,
+  icon: Icon,
   ...props
 }: ComponentProps<'pre'> & {
-  filename?: string
-  hasCopyCode?: boolean
-}): ReactElement => {
+  'data-filename'?: string
+  'data-copy'?: ''
+  'data-language'?: string
+  'data-word-wrap'?: ''
+  icon?: FC<ComponentProps<'svg'>>
+}): ReactElement {
   const preRef = useRef<HTMLPreElement | null>(null)
 
-  const toggleWordWrap = useCallback(() => {
-    const htmlDataset = document.documentElement.dataset
-    const hasWordWrap = 'nextraWordWrap' in htmlDataset
-    if (hasWordWrap) {
-      delete htmlDataset.nextraWordWrap
-    } else {
-      htmlDataset.nextraWordWrap = ''
-    }
-  }, [])
+  const copyButton = copy === '' && (
+    <CopyToClipboard
+      className={filename ? '_ml-auto' : ''}
+      getValue={() => preRef.current?.querySelector('code')?.textContent || ''}
+    />
+  )
 
   return (
-    <div className="nextra-code-block nx-relative nx-mt-6 first:nx-mt-0">
+    <div className="nextra-code _relative [&:not(:first-child)]:_mt-6">
       {filename && (
-        <div className="nx-absolute nx-top-0 nx-z-[1] nx-w-full nx-truncate nx-rounded-t-xl nx-bg-primary-700/5 nx-py-2 nx-px-4 nx-text-xs nx-text-gray-700 dark:nx-bg-primary-300/10 dark:nx-text-gray-200">
-          {filename}
+        <div
+          className={cn(
+            '_px-4 _text-xs _text-gray-700 dark:_text-gray-200',
+            '_bg-gray-100 dark:_bg-neutral-900',
+            '_flex _items-center _h-12 _gap-2 _rounded-t-md',
+            classes.border,
+            '_border-b-0'
+          )}
+        >
+          {Icon && <Icon className="_h-4 _w-auto _max-w-6 _shrink-0" />}
+          <span className="_truncate">{filename}</span>
+          {copyButton}
         </div>
       )}
       <pre
         className={cn(
-          'nx-bg-primary-700/5 nx-mb-4 nx-overflow-x-auto nx-rounded-xl nx-subpixel-antialiased dark:nx-bg-primary-300/10 nx-text-[.9em]',
-          'contrast-more:nx-border contrast-more:nx-border-primary-900/20 contrast-more:nx-contrast-150 contrast-more:dark:nx-border-primary-100/40',
-          filename ? 'nx-pt-12 nx-pb-4' : 'nx-py-4',
+          'nextra-focus',
+          '_overflow-x-auto _subpixel-antialiased _text-[.9em]',
+          '_bg-white dark:_bg-black _py-4',
+          '_ring-1 _ring-inset _ring-gray-300 dark:_ring-neutral-700',
+          'contrast-more:_ring-gray-900 contrast-more:dark:_ring-gray-50',
+          'contrast-more:_contrast-150',
+          filename ? '_rounded-b-md' : '_rounded-md',
           className
         )}
         ref={preRef}
@@ -48,25 +75,22 @@ export const Pre = ({
       </pre>
       <div
         className={cn(
-          'nx-opacity-0 nx-transition [div:hover>&]:nx-opacity-100 focus-within:nx-opacity-100',
-          'nx-flex nx-gap-1 nx-absolute nx-m-[11px] nx-right-0',
-          filename ? 'nx-top-8' : 'nx-top-0'
+          '_opacity-0 _transition [div:hover>&]:_opacity-100 focus-within:_opacity-100',
+          '_flex _gap-1 _absolute _right-4',
+          filename ? '_top-14' : '_top-2'
         )}
       >
-        <Button
-          onClick={toggleWordWrap}
-          className="md:nx-hidden"
-          title="Toggle word wrap"
-        >
-          <WordWrapIcon className="nx-pointer-events-none nx-h-4 nx-w-4" />
-        </Button>
-        {hasCopyCode && (
-          <CopyToClipboard
-            getValue={() =>
-              preRef.current?.querySelector('code')?.textContent || ''
-            }
-          />
+        {hasWordWrap === '' && (
+          <Button
+            onClick={toggleWordWrap}
+            className="md:_hidden"
+            title="Toggle word wrap"
+            variant="outline"
+          >
+            <WordWrapIcon height="16" />
+          </Button>
         )}
+        {!filename && copyButton}
       </div>
     </div>
   )

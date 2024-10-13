@@ -15,10 +15,10 @@ export const Page = defineDocumentType(() => ({
   computedFieldsPage,
 }))
 
-// Define the document type for each `_meta.ts` file
+// Define the document type for each `_meta.json` file
 export const MetaJson = defineDocumentType(() => ({
   name: 'MetaJson',
-  filePathPattern: `**/_meta.ts`,
+  filePathPattern: `**/_meta.json`,
 }))
 
 export default makeSource({

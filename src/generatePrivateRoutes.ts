@@ -1,13 +1,14 @@
-import { Project, SyntaxKind, ObjectLiteralExpression, PropertyAssignment } from "ts-morph";
+import { Project } from "ts-morph";
 import path from "path";
 import fs from "fs";
 import { globSync } from "fast-glob";
-import { PrivateRoutes } from './types';
+import { PrivateRoutes, MetaJson } from './types';
+
 
 /**
  * This function looks at the file system under a path 
- * and goes through each `_meta.ts` looking for private routes recursively.
- * It is expecting the `_meta.ts` values of keys to have a property 
+ * and goes through each `_meta.json` looking for private routes recursively.
+ * It is expecting the `_meta.json` values of keys to have a property 
  * called "private" to consider the route as private for specific roles.
  * If a parent is private, all the children are private as well. 
  * The children inherit the roles of their direct parent.
@@ -18,82 +19,47 @@ import { PrivateRoutes } from './types';
 export function getPrivateRoutes(pagesDir: string): PrivateRoutes {
   let privateRoutes: PrivateRoutes = {};
 
-  // Find all _meta.ts files recursively
-  const metaFiles = globSync(path.join(pagesDir, "**/_meta.ts"));
+  // Find all _meta.json files recursively
+  const metaFiles = globSync(path.join(pagesDir, "**/_meta.json"));
 
   // Variable to keep track if parent is private on nested routes and its role
   const rootPrivateSettings: { 
     [key: string]: { private: boolean; roles: string[] } 
   } = {};
 
-  // Initialize ts-morph Project for reading the _meta.ts files
-  const project = new Project();
-
   // Iterate over the found meta files
   for (const file of metaFiles) {
-    // Get the path of the file and parse it using ts-morph
+    // Get the path of file and read it
     const dir = path.dirname(file);
-    const sourceFile = project.addSourceFileAtPath(file);
+    const metaJson: MetaJson = JSON.parse(fs.readFileSync(file, "utf-8"));
 
-    // Get the default export assignment from the _meta.ts file
-    const defaultExport = sourceFile.getExportAssignments();
-    
-    if (!defaultExport) {
-      console.error(`No export assignment found in ${file}`);
-      continue;
-    }
+    // Iterate over the key/value pairs of the "_meta.json" file
+    for (const [key, meta] of Object.entries(metaJson)) {
+      const route = path.join(dir, key).replace(pagesDir, "").replace(/\\/g, "/");
 
-    const metaObject = defaultExport[0].getExpression();
-
-    // If the expression is an object literal, we can process it
-    if (metaObject?.getKind() === SyntaxKind.ObjectLiteralExpression) {
-      const objectLiteral = metaObject as ObjectLiteralExpression;
-      
-      // Iterate over the properties of the object literal
-      objectLiteral.getProperties().forEach(prop => {
-        if (prop.getKind() === SyntaxKind.PropertyAssignment) {
-          const propertyAssignment = prop as PropertyAssignment;
-          const key = propertyAssignment.getName();
-          const initializer = propertyAssignment.getInitializer();
-
-          if (!key || !initializer) {
-            return;
-          }
-
-          const route = path.join(dir, key).replace(pagesDir, "").replace(/\\/g, "/");
-
-          // Check if the current meta has a "private" property
-          if (initializer.getKind() === SyntaxKind.ObjectLiteralExpression) {
-            const metaInitializer = initializer as ObjectLiteralExpression;
-
-            // Check for "private" property inside the object
-            const privateProp = metaInitializer.getProperty("private") as PropertyAssignment;
-            if (privateProp) {
-              const privateValue = privateProp.getInitializer();
-
-              if (privateValue?.getKind() === SyntaxKind.TrueKeyword) {
-                privateRoutes[route] = [];
-                rootPrivateSettings[dir] = { private: true, roles: [] };
-              }
-              // If the "private" property is an object with possible roles
-              else if (privateValue?.getKind() === SyntaxKind.ObjectLiteralExpression) {
-                const privateObject = privateValue as ObjectLiteralExpression;
-                const rolesProp = privateObject.getProperty("roles") as PropertyAssignment;
-                const roles = rolesProp ? rolesProp.getInitializer()?.getText().replace(/[\[\]\s"]/g, "").split(",") as string[] : [] as string[];
-                privateRoutes[route] = roles;
-                rootPrivateSettings[dir] = { private: true, roles: roles };
-              }
-            }
-          } else {
-            // Check if the parent folder is private and inherit roles
-            const parentDir = path.resolve(dir, "..");
-            if (rootPrivateSettings[parentDir] && rootPrivateSettings[parentDir].private) {
-              const parentRoles = rootPrivateSettings[parentDir].roles;
-              privateRoutes[route] = parentRoles;
-            }
+      // Check if the current meta has a "private" property
+      if (meta.private !== undefined) {
+        if (typeof meta.private === "boolean") {
+          if (meta.private) {
+            privateRoutes[route] = [];
+            rootPrivateSettings[dir] = { private: true, roles: [] };
           }
         }
-      });
+        // If the "private" property is an object with possible roles
+        else if (meta.private.private === true) {
+          const roles = meta.private.roles ? meta.private.roles : [];
+          privateRoutes[route] = roles;
+          rootPrivateSettings[dir] = { private: true, roles: roles };
+        }
+      } else {
+        // Check if the parent folder is private and inherit roles
+        const parentDir = path.resolve(dir, "..");
+        if (rootPrivateSettings[parentDir] && 
+            rootPrivateSettings[parentDir].private) {
+          const parentRoles = rootPrivateSettings[parentDir].roles;
+          privateRoutes[route] = parentRoles;
+        }
+      }
     }
   }
 
@@ -136,7 +102,7 @@ export function changeMiddleware() {
       path.resolve(__dirname, "middleware.ts")
     );
   
-  // Find the variable to replace and change its declaration
+  // Find the variable to replace and change it's declaration
   const variable = sourceFile.getVariableDeclaration(CONST_VARIABLE_NAME);
   if (variable) {
     variable.setInitializer(JSON.stringify(privateRoutes));

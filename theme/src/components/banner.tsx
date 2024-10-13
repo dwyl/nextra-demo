@@ -1,13 +1,12 @@
 import cn from 'clsx'
-import { Button } from 'nextra/components'
 import { XIcon } from 'nextra/icons'
 import type { ReactElement } from 'react'
-import { useThemeConfig } from '../contexts'
+import { useConfig } from '../contexts'
 import { renderComponent } from '../utils'
 
 export function Banner(): ReactElement | null {
-  const { banner } = useThemeConfig()
-  if (!banner.content) {
+  const { banner } = useConfig()
+  if (!banner.text) {
     return null
   }
   const hideBannerScript = `try{if(localStorage.getItem(${JSON.stringify(
@@ -19,21 +18,20 @@ export function Banner(): ReactElement | null {
       <script dangerouslySetInnerHTML={{ __html: hideBannerScript }} />
       <div
         className={cn(
-          'nextra-banner-container max-md:_sticky _top-0 _z-20 _flex _items-center',
-          '_h-[var(--nextra-banner-height)] [body.nextra-banner-hidden_&]:_hidden',
-          '_text-slate-50 dark:_text-white _bg-neutral-900 dark:_bg-[linear-gradient(1deg,#383838,#212121)]',
-          '_px-2 _ps-10 print:_hidden'
+          'nextra-banner-container nx-sticky nx-top-0 nx-z-20 nx-flex nx-items-center md:nx-relative',
+          'nx-h-[var(--nextra-banner-height)] [body.nextra-banner-hidden_&]:nx-hidden',
+          'nx-text-slate-50 dark:nx-text-white nx-bg-neutral-900 dark:nx-bg-[linear-gradient(1deg,#383838,#212121)]',
+          'nx-px-2 ltr:nx-pl-10 rtl:nx-pr-10 print:nx-hidden'
         )}
       >
-        <div className="_w-full _truncate _text-center _font-medium _text-sm">
-          {renderComponent(banner.content)}
+        <div className="nx-w-full nx-truncate nx-px-4 nx-text-center nx-font-medium nx-text-sm">
+          {renderComponent(banner.text)}
         </div>
         {banner.dismissible && (
-          <Button
+          <button
+            type="button"
             aria-label="Dismiss banner"
-            className={({ hover }) =>
-              cn('_p-2', hover ? '_opacity-100' : '_opacity-80')
-            }
+            className="nx-w-8 nx-h-8 nx-opacity-80 hover:nx-opacity-100"
             onClick={() => {
               try {
                 localStorage.setItem(banner.key, '0')
@@ -43,8 +41,8 @@ export function Banner(): ReactElement | null {
               document.body.classList.add('nextra-banner-hidden')
             }}
           >
-            <XIcon height="16" />
-          </Button>
+            <XIcon className="nx-mx-auto nx-h-4 nx-w-4" />
+          </button>
         )}
       </div>
     </>

@@ -21,4 +21,3 @@ export type SearchResult = {
 export type ExtendedPageItem = { private?: PrivateInfo } & PageItem;
 export type ExtendedMenuItem = { private?: PrivateInfo } & MenuItem;
 export type ExtendedItem = { private?: PrivateInfo } & Item;
-

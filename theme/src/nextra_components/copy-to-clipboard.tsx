@@ -1,14 +1,14 @@
 import type { ComponentProps, ReactElement } from 'react'
 import { useCallback, useEffect, useState } from 'react'
-import { CheckIcon, CopyIcon } from '../nextra_icons/index.js'
-import { Button } from './button.js'
+import { CheckIcon, CopyIcon } from '../nextra_icons'
+import { Button } from './button'
 
-export function CopyToClipboard({
+export const CopyToClipboard = ({
   getValue,
   ...props
-}: ComponentProps<typeof Button> & {
+}: {
   getValue: () => string
-}): ReactElement {
+} & ComponentProps<'button'>): ReactElement => {
   const [isCopied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -22,7 +22,9 @@ export function CopyToClipboard({
     }
   }, [isCopied])
 
-  const handleClick = useCallback(async () => {
+  const handleClick = useCallback<
+    NonNullable<ComponentProps<'button'>['onClick']>
+  >(async () => {
     setCopied(true)
     if (!navigator?.clipboard) {
       console.error('Access to clipboard rejected!')
@@ -37,13 +39,8 @@ export function CopyToClipboard({
   const IconToUse = isCopied ? CheckIcon : CopyIcon
 
   return (
-    <Button
-      onClick={handleClick}
-      title="Copy code"
-      variant="outline"
-      {...props}
-    >
-      <IconToUse height="16" className="nextra-copy-icon" />
+    <Button onClick={handleClick} title="Copy code" tabIndex={0} {...props}>
+      <IconToUse className="nextra-copy-icon nx-pointer-events-none nx-h-4 nx-w-4" />
     </Button>
   )
 }

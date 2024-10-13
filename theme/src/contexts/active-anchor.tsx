@@ -1,5 +1,7 @@
 import type { Dispatch, ReactElement, ReactNode, SetStateAction } from 'react'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import 'intersection-observer'
+import { createContext, useContext, useRef, useState } from 'react'
+import { IS_BROWSER } from './config'
 
 type ActiveAnchor = Record<
   string,
@@ -11,21 +13,16 @@ type ActiveAnchor = Record<
   }
 >
 
-const ActiveAnchorContext = createContext<ActiveAnchor>(null!)
-ActiveAnchorContext.displayName = 'ActiveAnchor'
-
+const ActiveAnchorContext = createContext<ActiveAnchor>({})
 const SetActiveAnchorContext = createContext<
   Dispatch<SetStateAction<ActiveAnchor>>
->(null!)
-SetActiveAnchorContext.displayName = 'SetActiveAnchor'
+>(v => v)
 
 const IntersectionObserverContext = createContext<IntersectionObserver | null>(
   null
 )
-IntersectionObserverContext.displayName = 'IntersectionObserver'
 const slugs = new WeakMap()
 const SlugsContext = createContext<WeakMap<any, any>>(slugs)
-SlugsContext.displayName = 'Slugs'
 // Separate the state as 2 contexts here to avoid
 // re-renders of the content triggered by the state update.
 export const useActiveAnchor = () => useContext(ActiveAnchorContext)
@@ -41,12 +38,8 @@ export const ActiveAnchorProvider = ({
   children: ReactNode
 }): ReactElement => {
   const [activeAnchor, setActiveAnchor] = useState<ActiveAnchor>({})
-  const observerRef = useRef<IntersectionObserver>(null!)
-
-  useEffect(() => {
-    const navbarHeight = getComputedStyle(document.body).getPropertyValue(
-      '--nextra-navbar-height'
-    )
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  if (IS_BROWSER && !observerRef.current) {
     observerRef.current = new IntersectionObserver(
       entries => {
         setActiveAnchor(f => {
@@ -94,15 +87,11 @@ export const ActiveAnchorProvider = ({
         })
       },
       {
-        rootMargin: `-${navbarHeight} 0px -50%`,
+        rootMargin: '0px 0px -50%',
         threshold: [0, 1]
       }
     )
-
-    return () => {
-      observerRef.current.disconnect()
-    }
-  }, [])
+  }
   return (
     <ActiveAnchorContext.Provider value={activeAnchor}>
       <SetActiveAnchorContext.Provider value={setActiveAnchor}>

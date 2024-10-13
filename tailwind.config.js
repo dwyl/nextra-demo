@@ -1,19 +1,21 @@
 const colors = require('tailwindcss/colors')
 
-const makePrimaryColor  =
-  (l) =>
+const makePrimaryColor =
+  l =>
   ({ opacityValue }) => {
     return (
       `hsl(var(--nextra-primary-hue) var(--nextra-primary-saturation) ${l}%` +
       (opacityValue ? ` / ${opacityValue})` : ')')
     )
   }
-export default {
-  prefix: '_',
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  prefix: 'nx-',
   content: [
     './theme/src/**/*.tsx',
-    './theme/src/nextra_icons/*.{tsx,svg}',
-    './theme/src/nextra_components/**/*.tsx',
+    './theme/src/nextra_icons/*.tsx',
+    './theme/src/nextra_components/*.tsx'
   ],
   theme: {
     screens: {
@@ -62,6 +64,11 @@ export default {
         750: makePrimaryColor(35),
         800: makePrimaryColor(32),
         900: makePrimaryColor(24)
+      }
+    },
+    extend: {
+      colors: {
+        dark: '#111'
       }
     }
   },

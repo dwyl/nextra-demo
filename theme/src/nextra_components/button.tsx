@@ -1,36 +1,22 @@
-import { Button as HeadlessButton } from '@headlessui/react'
-import type { ButtonProps } from '@headlessui/react'
 import cn from 'clsx'
-import type { ReactElement } from 'react'
+import type { ComponentProps, ReactElement } from 'react'
 
-export const classes = {
-  border: cn(
-    '_border _border-gray-300 dark:_border-neutral-700',
-    'contrast-more:_border-gray-900 contrast-more:dark:_border-gray-50'
-  )
-}
-
-export function Button({
+export const Button = ({
   children,
   className,
-  variant = 'default',
   ...props
-}: ButtonProps & {
-  variant?: 'outline' | 'default'
-}): ReactElement {
+}: ComponentProps<'button'>): ReactElement => {
   return (
-    <HeadlessButton
-      className={args =>
-        cn(
-          '_transition',
-          args.focus && 'nextra-focusable',
-          variant === 'outline' && [classes.border, '_rounded-md _p-1.5'],
-          typeof className === 'function' ? className(args) : className
-        )
-      }
+    <button
+      className={cn(
+        'nextra-button nx-transition-all active:nx-opacity-50',
+        'nx-bg-primary-700/5 nx-border nx-border-black/5 nx-text-gray-600 hover:nx-text-gray-900 nx-rounded-md nx-p-1.5',
+        'dark:nx-bg-primary-300/10 dark:nx-border-white/10 dark:nx-text-gray-400 dark:hover:nx-text-gray-50',
+        className
+      )}
       {...props}
     >
       {children}
-    </HeadlessButton>
+    </button>
   )
 }

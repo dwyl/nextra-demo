@@ -1,7 +1,6 @@
 import cn from 'clsx'
 import { createContext, memo, useCallback, useContext, useState } from 'react'
 import type { ReactElement, ReactNode } from 'react'
-import { Button } from './button.js'
 
 const ctx = createContext(0)
 
@@ -28,13 +27,13 @@ function Tree({ children }: { children: ReactNode }): ReactElement {
   return (
     <div
       className={cn(
-        'nextra-filetree _mt-6 _select-none _text-sm _text-gray-800 dark:_text-gray-300',
-        '_not-prose' // for nextra-theme-blog
+        'nextra-filetree nx-mt-6 nx-select-none nx-text-sm nx-text-gray-800 dark:nx-text-gray-300',
+        'nx-not-prose' // for nextra-theme-blog
       )}
     >
-      <ul className="_inline-block _rounded-lg _border _px-4 _py-2 _border-neutral-200/70 contrast-more:_border-neutral-400 dark:_border-primary-100/10 contrast-more:dark:_border-neutral-400">
+      <div className="nx-inline-block nx-rounded-lg nx-border nx-px-4 nx-py-2 dark:nx-border-neutral-800">
         {children}
-      </ul>
+      </div>
     </div>
   )
 }
@@ -44,8 +43,7 @@ function Ident(): ReactElement {
   return (
     <>
       {Array.from({ length }, (_, i) => (
-        // Text can shrink indent
-        <span className="_w-5 _shrink-0" key={i} />
+        <span className="nx-w-5" key={i} />
       ))}
     </>
   )
@@ -64,22 +62,14 @@ const Folder = memo<FolderProps>(
     const isFolderOpen = open === undefined ? isOpen : open
 
     return (
-      <li className="_flex _list-none _flex-col">
-        <Button
+      <li className="nx-flex nx-list-none nx-flex-col">
+        <button
           onClick={toggle}
           title={name}
-          className={({ hover }) =>
-            cn('_inline-flex _items-center _py-1', hover && '_opacity-60')
-          }
+          className="nx-inline-flex nx-cursor-pointer nx-items-center nx-py-1 hover:nx-opacity-60"
         >
           <Ident />
-          <svg
-            width="1em"
-            height="1em"
-            viewBox="0 0 24 24"
-            // Text can shrink icon
-            className="_shrink-0"
-          >
+          <svg width="1em" height="1em" viewBox="0 0 24 24">
             <path
               fill="none"
               stroke="currentColor"
@@ -93,8 +83,8 @@ const Folder = memo<FolderProps>(
               }
             />
           </svg>
-          <span className="_ml-1">{label ?? name}</span>
-        </Button>
+          <span className="nx-ml-1">{label ?? name}</span>
+        </button>
         {isFolderOpen && (
           <ul>
             <ctx.Provider value={indent + 1}>{children}</ctx.Provider>
@@ -109,19 +99,13 @@ Folder.displayName = 'Folder'
 const File = memo<FileProps>(({ label, name, active }) => (
   <li
     className={cn(
-      '_flex _list-none',
-      active && '_text-primary-600 contrast-more:_underline'
+      'nx-flex nx-list-none',
+      active && 'nx-text-primary-600 contrast-more:nx-underline'
     )}
   >
-    <span className="_inline-flex _cursor-default _items-center _py-1">
+    <span className="nx-inline-flex nx-cursor-default nx-items-center nx-py-1">
       <Ident />
-      <svg
-        width="1em"
-        height="1em"
-        viewBox="0 0 24 24"
-        // Text can shrink icon
-        className="_shrink-0"
-      >
+      <svg width="1em" height="1em" viewBox="0 0 24 24">
         <path
           fill="none"
           stroke="currentColor"
@@ -131,7 +115,7 @@ const File = memo<FileProps>(({ label, name, active }) => (
           d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"
         />
       </svg>
-      <span className="_ml-1">{label ?? name}</span>
+      <span className="nx-ml-1">{label ?? name}</span>
     </span>
   </li>
 ))

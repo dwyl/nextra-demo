@@ -20,7 +20,7 @@
     "next-compose-plugins": "^2.2.1",
     "next-plausible": "^3.12.1",
     "nextra": "3.0.0-alpha.42",
-    "nextra-theme-docs": "3.0.0-alpha.42",
+    "nextra-theme-docs": "^2.13.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

@@ -23,7 +23,6 @@ export function ThemeConfigProvider({
           key,
           value && typeof value === 'object' && DEEP_OBJECT_KEYS.includes(key)
             ? 
-              // @ts-ignore
               { ...DEFAULT_THEME[key], ...value }
             : value
         ])

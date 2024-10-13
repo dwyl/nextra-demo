@@ -1,10 +1,11 @@
 import cn from 'clsx'
 import type { ReactElement, ReactNode } from 'react'
+import { InformationCircleIcon } from '../nextra_icons/index.js'
 
 const TypeToEmoji = {
   default: '💡',
   error: '🚫',
-  info: 'ℹ️',
+  info: <InformationCircleIcon className="_mt-1" />,
   warning: '⚠️'
 }
 

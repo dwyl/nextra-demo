@@ -1,7 +1,14 @@
 /* eslint typescript-sort-keys/interface: error */
+import type { PageOpts } from 'nextra'
 import type { ReactNode } from 'react'
+import type { DocsThemeConfig } from './contexts/config'
 import type { Item, MenuItem, PageItem } from 'nextra/normalize-pages'
 import { PrivateInfo } from '../../src/types';
+
+export type Context = {
+  pageOpts: PageOpts
+  themeConfig: DocsThemeConfig
+}
 
 export type SearchResult = {
   children: ReactNode

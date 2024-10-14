@@ -1,5 +1,5 @@
 import { changeMiddleware, getPrivateRoutes } from "@/src/generatePrivateRoutes";
-import { globSync } from "fast-glob";
+import { globSync } from "glob";
 import { existsSync, readFileSync } from "fs";
 import path, { resolve } from "path";
 import { Project, SyntaxKind } from "ts-morph";
@@ -14,8 +14,8 @@ jest.mock("path", () => ({
   resolve: jest.fn(),
 }));
 
-// Mock fast-glob
-jest.mock("fast-glob", () => ({
+// Mock glob
+jest.mock("glob", () => ({
   globSync: jest.fn(),
 }));
 

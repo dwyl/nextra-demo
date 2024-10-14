@@ -1,7 +1,7 @@
 import { Project, SyntaxKind, ObjectLiteralExpression, PropertyAssignment } from "ts-morph";
 import path from "path";
 import fs from "fs";
-import { globSync } from "fast-glob";
+import { globSync } from "glob";
 import { PrivateRoutes } from './types';
 
 /**

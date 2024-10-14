@@ -3088,7 +3088,7 @@ We're going to keep using `remark` and `remark-lint` to lint our `.mdx` files.
 Run the following command:
 
 ```sh
-pnpm add --save-dev -w yargs ignore url glob remark vfile-reporter to-vfile remark-mdx remark-gfm remark-lint remark-validate-links
+pnpm add --save-dev -w yargs ignore url glob remark vfile-reporter to-vfile remark-mdx remark-gfm remark-lint remark-validate-links remark-lint-no-dead-urls
 ```
 
 We are going to be using these libraries to create a script

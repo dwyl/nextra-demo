@@ -23,7 +23,7 @@ jobs:
     - name: Install dependencies
       run: pnpm install --no-frozen-lockfile
 
-    # Run `markdownlint-cli2` to lint markdown files (checks dead links with `remark-validate-links`)
+    # Run `markdownlint-cli2` to lint markdown files (checks dead links with `remark-lint-no-dead-urls`)
     - name: Running `markdownlint-cli2`
       run: pnpm run lint:check-markdown
 

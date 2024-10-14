@@ -1,31 +1,21 @@
-import { findDeadExternalLinksInMarkdown } from "scripts/link-check.mjs";
+import { processFiles } from "lint/lint.mjs";
 jest.useFakeTimers();
 
-// Mock contentlayer2
-jest.mock("contentlayer2/client", () => ({
-  isType: jest.fn(),
-}));
-
 // Test suite for getPrivateRoutes function
-describe("testing external routes", () => {
+describe("testing external routes", async () => {
   it("should succeed with correct links", async () => {
-    const markdownBody = "[external_link](https://www.example.com/)";
-    const deadLinks: string[] = await findDeadExternalLinksInMarkdown(markdownBody);
+    // Get current directory
+    const validPath = `${process.cwd()}/test-valid.mdx`
+    const ignorePath = `${process.cwd()}/.sample_ignore`
+    const res = await processFiles(validPath, ignorePath, "../../lint/remark-preset.mjs", false, true)
 
-    expect(deadLinks).toEqual([]);
+    expect(res).toHaveBeenCalled();
   });
 
-  it("should succeed and show dead links", async () => {
-    const markdownBody = "[external_link](https://localhost/)";
-    const deadLinks: string[] = await findDeadExternalLinksInMarkdown(markdownBody);
-
-    expect(deadLinks.length).toEqual(1);
-  });
-
-  it("invalid hash should not be included", async () => {
-    const markdownBody = "[external_link](invalid:https://localhost/)";
-    const deadLinks: string[] = await findDeadExternalLinksInMarkdown(markdownBody);
-
-    expect(deadLinks.length).toEqual(0);
-  });
+ it("invalid hash should not be included", async () => {
+    // Get current directory
+    const validPath = `${process.cwd()}/test-invalid.mdx`
+    const ignorePath = `${process.cwd()}/.sample_ignore`
+    expect(await processFiles(validPath, ignorePath, "../../lint/remark-preset.mjs", false, true)).toThrow()
+ });
 });

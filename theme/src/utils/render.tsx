@@ -1,13 +1,16 @@
-import { SessionContextValue } from "next-auth/react";
-import type { FC, ReactNode } from "react";
+import type { FC, ReactNode } from 'react'
 import { ExtendedUser } from "../../../src/types";
 import { ExtendedItem, ExtendedPageItem, ExtendedMenuItem } from "../types";
+import { SessionContextValue } from "next-auth/react";
 
-export function renderComponent<T>(ComponentOrNode: FC<T> | ReactNode, props?: T) {
-  if (!ComponentOrNode) return null;
-  if (typeof ComponentOrNode !== "function") return ComponentOrNode;
+export function renderComponent<T>(
+  ComponentOrNode: FC<T> | ReactNode,
+  props?: T
+) {
+  if (!ComponentOrNode) return null
+  if (typeof ComponentOrNode !== 'function') return ComponentOrNode
   // @ts-expect-error TS2322: Type '{}' is not assignable to type 'T'
-  return <ComponentOrNode {...props} />;
+  return <ComponentOrNode {...props} />
 }
 
 export function renderString<T>(
@@ -15,9 +18,13 @@ export function renderString<T>(
   // @ts-expect-error TS2322: Type '{}' is not assignable to type 'T'.
   props: T = {}
 ): string {
-  const result = typeof stringOrFunction === "function" ? stringOrFunction(props) : stringOrFunction;
-  return result || "";
+  const result =
+    typeof stringOrFunction === 'function'
+      ? stringOrFunction(props)
+      : stringOrFunction
+  return result || ''
 }
+
 
 /**
  * This functions tells if the user can see a given `navbar` or `sidebar` link item

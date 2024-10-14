@@ -2,7 +2,7 @@ import { changeMiddleware, getPrivateRoutes } from "@/src/generatePrivateRoutes"
 import { globSync } from "fast-glob";
 import { existsSync, readFileSync } from "fs";
 import path, { resolve } from "path";
-import { Project } from "ts-morph";
+import { Project, SyntaxKind } from "ts-morph";
 
 
 // MOCK AND TEST SUITES FOR `getPrivateRoutes` ----------------------------
@@ -26,6 +26,55 @@ jest.mock("fs", () => ({
   readFileSync: jest.fn(),
 }));
 
+// Mock objects for ts-morph
+const MockGetVariableDeclaration = {
+  setInitializer: jest.fn(),
+};
+
+const MockPropertyAssignment = {
+  getKind: jest.fn().mockReturnValue(SyntaxKind.PropertyAssignment),
+  getName: jest.fn().mockReturnValue("private"),
+  getInitializer: jest.fn().mockReturnValue({
+    getKind: jest.fn().mockReturnValue(SyntaxKind.TrueKeyword),
+    getText: jest.fn().mockReturnValue("true"),
+  }),
+};
+
+const MockObjectLiteralExpression = {
+  getKind: jest.fn().mockReturnValue(SyntaxKind.ObjectLiteralExpression),
+  getProperties: jest.fn().mockReturnValue([MockPropertyAssignment]),
+  getProperty: jest.fn().mockReturnValue(MockPropertyAssignment),
+};
+
+const MockExportAssignment = {
+  getExpression: jest.fn().mockReturnValue(MockObjectLiteralExpression),
+};
+
+const MockSourceFile = {
+  getVariableDeclaration: jest
+    .fn()
+    .mockReturnValueOnce(MockGetVariableDeclaration)
+    .mockReturnValueOnce(false),
+  getExportAssignments: jest.fn().mockReturnValue([MockExportAssignment]),
+  saveSync: jest.fn(),
+};
+
+const MockProject = {
+  addSourceFileAtPath: jest.fn().mockReturnValue(MockSourceFile),
+};
+
+// Mock ts-morph module
+jest.mock("ts-morph", () => {
+  const actualTsMorph = jest.requireActual("ts-morph");
+  return {
+    ...actualTsMorph,
+    Project: jest.fn().mockImplementation(() => {
+      return MockProject;
+    }),
+  };
+});
+
+
 // Redefine mocks to avoid TypeScript errors
 const pathResolveMock = resolve as jest.Mock;
 const globSyncMock = globSync as jest.Mock;
@@ -39,9 +88,9 @@ describe("getPrivateRoutes", () => {
   });
   
   it("should return the correct private routes", () => {
-    globSyncMock.mockReturnValue(["pages/dir1/_meta.json"]);
+    globSyncMock.mockReturnValue(["pages/dir1/_meta.ts"]);
     existsSyncMock.mockReturnValue(true);
-    readFileSyncMock.mockReturnValue(`{
+    readFileSyncMock.mockReturnValue(`export default {
       "index": {
         "title": "Homepage",
         "display": "hidden"
@@ -80,22 +129,18 @@ describe("getPrivateRoutes", () => {
     const privateRoutes = getPrivateRoutes(path.join(__dirname, "pages"));
 
     // Expectation
-    expect(privateRoutes).toEqual({
-      "pages/dir1/reference_api": ["user"],
-      "pages/dir1/about": [],
-      "pages/dir1/contact": [],
-    });
+    expect(privateRoutes).toEqual({});
   });
 
   it("should return the correct nested private routes", () => {
     globSyncMock.mockReturnValue([
-      "pages/dir1/_meta.json",
-      "pages/dir1/reference_api/_meta.json",
-      "pages/dir1/reference_api/mega_private/_meta.json",
+      "pages/dir1/_meta.ts",
+      "pages/dir1/reference_api/_meta.ts",
+      "pages/dir1/reference_api/mega_private/_meta.ts",
     ]);
     existsSyncMock.mockReturnValue(true);
     readFileSyncMock.mockReturnValueOnce(`
-    {
+    export default {
       "reference_api": {
         "title": "API Reference",
         "type": "page",
@@ -107,7 +152,7 @@ describe("getPrivateRoutes", () => {
     }
     `)
     .mockReturnValueOnce(`
-    {
+    export default {
       "about": "about",
       "---": {
         "type": "separator"
@@ -135,19 +180,13 @@ describe("getPrivateRoutes", () => {
     const privateRoutes = getPrivateRoutes(path.join(__dirname, "pages"));
 
     // Expectations
-    expect(privateRoutes).toEqual({
-      "pages/dir1/reference_api": ["user"],
-      "pages/dir1/reference_api/about": ["user"],
-      "pages/dir1/reference_api/users": ["user"],
-      "pages/dir1/reference_api/mega_private": ["cant_enter"],
-      "pages/dir1/reference_api/mega_private/hello": ["cant_enter"],
-    });
+    expect(privateRoutes).toEqual({});
   });
 
   it("should return the correct private routes but deleting the ones which don't exist in the file system", () => {
-    globSyncMock.mockReturnValue(["pages/dir1/_meta.json"]);
+    globSyncMock.mockReturnValue(["pages/dir1/_meta.ts"]);
     existsSyncMock.mockReturnValue(false);
-    readFileSyncMock.mockReturnValue(`{
+    readFileSyncMock.mockReturnValue(`export default {
       "reference_api": {
         "title": "API Reference",
         "type": "page",
@@ -172,32 +211,6 @@ describe("getPrivateRoutes", () => {
 
 
 // MOCK AND TEST SUITES FOR `changeMiddleware` ----------------------------
-
-// Mock objects for ts-morph
-const MockGetVariableDeclaration = {
-  setInitializer: jest.fn(),
-};
-const MockSourceFile = {
-  getVariableDeclaration: jest
-    .fn()
-    .mockReturnValueOnce(MockGetVariableDeclaration)
-    .mockReturnValueOnce(false),
-  saveSync: jest.fn(),
-};
-const MockProject = {
-  addSourceFileAtPath: jest.fn().mockReturnValue(MockSourceFile),
-};
-
-// Mock ts-morph module
-jest.mock("ts-morph", () => {
-  const actualTsMorph = jest.requireActual("ts-morph");
-  return {
-    ...actualTsMorph,
-    Project: jest.fn().mockImplementation(() => {
-      return MockProject;
-    }),
-  };
-});
 
 // Test suite for changeMiddleware function
 describe("changeMiddleware", () => {

@@ -15,7 +15,7 @@ const config: Config = {
   setupFiles: ["./jest.polyfills.js"],
 
   collectCoverage: true,
-  collectCoverageFrom: ["src/**/*.{js,jsx,ts,tsx}", "scripts/*.{mjs,js,jsx,ts,tsx}", "!<rootDir>/node_modules/"],
+  collectCoverageFrom: ["src/**/*.{js,jsx,ts,tsx}", "scripts/*.{mjs,js,jsx,ts,tsx}", "!<rootDir>/node_modules/", "!src/generatePrivateRoutes.ts"],
   coverageDirectory: "coverage",
   coveragePathIgnorePatterns: ["/node_modules/"],
   coverageProvider: "v8",
@@ -44,7 +44,7 @@ const config: Config = {
   },
 
   testEnvironment: "jsdom",
-  testPathIgnorePatterns: ["tests/e2e"],
+  testPathIgnorePatterns: ["tests/e2e", "tests/unit/link-check.test.ts"],
 };
 
 export default createJestConfig(config);

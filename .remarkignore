@@ -1,0 +1,10 @@
+# `_app.mdx` and `index.mdx` files  are essentially `.js` files that don't need linting.
+src/**/_app.mdx
+src/**/index.mdx
+
+# Parked/archived directories won't be linted
+src/**/**/_*
+
+
+# Linting rules don't need to apply to `README.md`, only for documentation
+README.md

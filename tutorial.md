@@ -22,6 +22,7 @@
     - [4.3 Implementing private route retrieval function](#43-implementing-private-route-retrieval-function)
       - [4.3.1 Defining `_meta.json` files with `private` properties](#431-defining-_metajson-files-with-private-properties)
       - [4.3.2 Implementing the function](#432-implementing-the-function)
+        - [4.3.2.1 `Nextra` `v3` version](#4321-nextra-v3-version)
     - [4.4 Running the script before building](#44-running-the-script-before-building)
   - [5. Moving source files to `src` folder](#5-moving-source-files-to-src-folder)
   - [6. Adding custom theme](#6-adding-custom-theme)
@@ -36,11 +37,26 @@
       - [7.4.1 Understanding how directory items are passed down to the `sidebar`](#741-understanding-how-directory-items-are-passed-down-to-the-sidebar)
       - [7.4.2 Conditionally rendering links in `Menu` inside the `sidebar`](#742-conditionally-rendering-links-in-menu-inside-the-sidebar)
   - [8. Linting the `Markdown` files](#8-linting-the-markdown-files)
-    - [8.1 Installing dependencies](#81-installing-dependencies)
-    - [8.2 Checking external links](#82-checking-external-links)
-    - [8.3 Linting and checking for broken internal relative links](#83-linting-and-checking-for-broken-internal-relative-links)
-    - [8.4 Adding to CI](#84-adding-to-ci)
+    - [8.1 Linting in `Nextra v2`](#81-linting-in-nextra-v2)
+      - [8.1.1 Installing dependencies](#811-installing-dependencies)
+      - [8.1.2 Checking external links](#812-checking-external-links)
+      - [8.1.3 Linting and checking for broken internal relative links](#813-linting-and-checking-for-broken-internal-relative-links)
+      - [8.1.4 Adding to CI](#814-adding-to-ci)
+    - [8.2 Linting in `Nextra v3`](#82-linting-in-nextra-v3)
+      - [8.2.1 Install packages](#821-install-packages)
+      - [8.2.1 Adding ignore file](#821-adding-ignore-file)
+      - [8.2.2 Create the script](#822-create-the-script)
+      - [8.2.3 Adding preset file](#823-adding-preset-file)
+      - [8.2.4 Adding to `package.json`](#824-adding-to-packagejson)
 - [Star the repo!](#star-the-repo)
+
+
+> [!IMPORTANT]
+>
+> While this tutorial was initially written for `v2` of `Nextra`,
+> most of the content is still relevant for `v3`.
+> We make sure to highlight the differences
+> throughout the tutorial.
 
 > [!TIP]
 >
@@ -1436,6 +1452,118 @@ But the gist of it is:
 
 And that's it!
 
+##### 4.3.2.1 `Nextra` `v3` version
+
+[For Nextra `v3`](https://github.com/shuding/nextra/tree/v3),
+we need to make a few changes.
+Because `_meta.json` files now become **`_meta.ts`** files,
+we're going to change the `getPrivateRoutes` function.
+
+```ts
+export function getPrivateRoutes(pagesDir: string): PrivateRoutes {
+  let privateRoutes: PrivateRoutes = {};
+
+  // Find all _meta.ts files recursively
+  const metaFiles = globSync(path.join(pagesDir, "**/_meta.ts"));
+
+  // Variable to keep track if parent is private on nested routes and its role
+  const rootPrivateSettings: { 
+    [key: string]: { private: boolean; roles: string[] } 
+  } = {};
+
+  // Initialize ts-morph Project for reading the _meta.ts files
+  const project = new Project();
+
+  // Iterate over the found meta files
+  for (const file of metaFiles) {
+    // Get the path of the file and parse it using ts-morph
+    const dir = path.dirname(file);
+    const sourceFile = project.addSourceFileAtPath(file);
+
+    // Get the default export assignment from the _meta.ts file
+    const defaultExport = sourceFile.getExportAssignments();
+    
+    if (!defaultExport) {
+      console.error(`No export assignment found in ${file}`);
+      continue;
+    }
+
+    const metaObject = defaultExport[0].getExpression();
+
+    // If the expression is an object literal, we can process it
+    if (metaObject?.getKind() === SyntaxKind.ObjectLiteralExpression) {
+      const objectLiteral = metaObject as ObjectLiteralExpression;
+      
+      // Iterate over the properties of the object literal
+      objectLiteral.getProperties().forEach(prop => {
+        if (prop.getKind() === SyntaxKind.PropertyAssignment) {
+          const propertyAssignment = prop as PropertyAssignment;
+          const key = propertyAssignment.getName();
+          const initializer = propertyAssignment.getInitializer();
+
+          if (!key || !initializer) {
+            return;
+          }
+
+          const route = path.join(dir, key).replace(pagesDir, "").replace(/\\/g, "/");
+
+          // Check if the current meta has a "private" property
+          if (initializer.getKind() === SyntaxKind.ObjectLiteralExpression) {
+            const metaInitializer = initializer as ObjectLiteralExpression;
+
+            // Check for "private" property inside the object
+            const privateProp = metaInitializer.getProperty("private") as PropertyAssignment;
+            if (privateProp) {
+              const privateValue = privateProp.getInitializer();
+
+              if (privateValue?.getKind() === SyntaxKind.TrueKeyword) {
+                privateRoutes[route] = [];
+                rootPrivateSettings[dir] = { private: true, roles: [] };
+              }
+              // If the "private" property is an object with possible roles
+              else if (privateValue?.getKind() === SyntaxKind.ObjectLiteralExpression) {
+                const privateObject = privateValue as ObjectLiteralExpression;
+                const rolesProp = privateObject.getProperty("roles") as PropertyAssignment;
+                const roles = rolesProp ? rolesProp.getInitializer()?.getText().replace(/[\[\]\s"]/g, "").split(",") as string[] : [] as string[];
+                privateRoutes[route] = roles;
+                rootPrivateSettings[dir] = { private: true, roles: roles };
+              }
+            }
+          } else {
+            // Check if the parent folder is private and inherit roles
+            const parentDir = path.resolve(dir, "..");
+            if (rootPrivateSettings[parentDir] && rootPrivateSettings[parentDir].private) {
+              const parentRoles = rootPrivateSettings[parentDir].roles;
+              privateRoutes[route] = parentRoles;
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // Second pass to clean-up possible unwanted/invalid routes
+  for (const route of Object.keys(privateRoutes)) {
+    const fullPath = path.join(pagesDir, route);
+    const lastSegment = route.split("/").pop();
+
+    // Remove separators or any route that doesn't match existing file/directory
+    if (lastSegment === "---") {
+      delete privateRoutes[route];
+      continue;
+    }
+
+    // Check for the existence of .mdx file
+    const mdxPath = `${fullPath}.mdx`;
+    if (!fs.existsSync(fullPath) && !fs.existsSync(mdxPath)) {
+      delete privateRoutes[route];
+    }
+  }
+
+  return privateRoutes;
+}
+```
+
 
 ### 4.4 Running the script before building
 
@@ -2368,9 +2496,64 @@ function Menu({
 }
 ```
 
+> [!NOTE]
+>
+> In `Nextra v3`, you will only need to add the following code to the `Menu` function:
+>
+> ```ts
+> if(!shouldLinkBeRenderedAccordingToUserRole(session, item))
+>           return null
+> ```
+
 We are calling the `useSession()` hoook
 and using the `shouldLinkBeRenderedAccordingToUserRole()` function to render the links
 according to the person role!
+
+This function is a function that we create in `/theme/src/utils/render.tsx`.
+Change it so it has the following piece of code following:
+
+```tsx
+import { ExtendedUser } from "../../../src/types";
+import { ExtendedItem, ExtendedPageItem, ExtendedMenuItem } from "../types";
+import { SessionContextValue } from "next-auth/react";
+
+/**
+ * This functions tells if the user can see a given `navbar` or `sidebar` link item
+ * according to its role.
+ * @param session session from the user.
+ * @param item item (can either be a page item, menu item or normal item)
+ * @returns true if the link can be shown to the user. False if the user doesn't have authorization to see the link.
+ */
+export function shouldLinkBeRenderedAccordingToUserRole(
+  session: SessionContextValue<boolean>,
+  item: ExtendedItem | ExtendedPageItem | ExtendedMenuItem
+) {
+  const { data, status: session_status } = session;
+  const user = data?.user as ExtendedUser;
+
+  // Wait until the session is fetched (be it empty or authenticated)
+  if (session_status === "loading") return false;
+
+  // If it's a public user but the link is marked as private, hide it
+  if (session_status === "unauthenticated") {
+    if (item.private) return false;
+  }
+
+  // If the user is authenticated
+  // and the page menu is protected or the role of the user is not present in the array, we block it
+  if (session_status === "authenticated" && user) {
+    if (item.private?.private) {
+      const neededRoles = item.private.roles || [];
+      const userRole = user.role;
+      if (!userRole || !neededRoles.includes(userRole)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+```
 
 And that's it!
 Congratulations,
@@ -2390,6 +2573,8 @@ Great job! 🎉
 
 
 ## 8. Linting the `Markdown` files
+
+### 8.1 Linting in `Nextra v2`
 
 [Maintaining a consistent style guide](https://learn.microsoft.com/en-us/style-guide/welcome/)
 is critical for documentation to be easily accessible.
@@ -2435,7 +2620,7 @@ Are you ready to get started?
 Let's go! 🏃‍♂️
 
 
-### 8.1 Installing dependencies
+#### 8.1.1 Installing dependencies
 
 Let's start by installing some dependencies.
 Run the following commands.
@@ -2480,7 +2665,7 @@ in case linting fails.
 Now we're ready to start implementing these features!
 
 
-### 8.2 Checking external links
+#### 8.1.2 Checking external links
 
 Let's start with arguably the "hardest" feature to implement.
 We're going to scour the Markdown files for external links
@@ -2732,7 +2917,7 @@ or if everything is valid!
 > ```
 
 
-### 8.3 Linting and checking for broken internal relative links
+#### 8.1.3 Linting and checking for broken internal relative links
 
 Now let's lint our `.mdx` files
 and check if the relative links are properly set up!
@@ -2816,7 +3001,7 @@ pnpm run lint:fix-markdown
 The console will log any issues that arise.
 
 
-### 8.4 Adding to CI
+#### 8.1.4 Adding to CI
 
 Because we've automated the linting,
 it's simple for us to use in our Github Actions workflow!
@@ -2887,6 +3072,300 @@ we simply call the scripts from our `package.json` file!
 
 Simple as! 😃
 
+
+### 8.2 Linting in `Nextra v3`
+
+In `Nextra v3`, we cannot use `contentlayer2` because it clashes
+with `Nextra`'s dependencies,
+making it impossible to use both in the same project.
+
+With this in mind,
+we are streamlining the linting process.
+We're going to keep using `remark` and `remark-lint` to lint our `.mdx` files.
+
+#### 8.2.1 Install packages
+
+Run the following command:
+
+```sh
+pnpm add --save-dev -w yargs ignore url glob remark vfile-reporter to-vfile remark-mdx remark-gfm remark-lint remark-validate-links remark-lint-no-dead-urls
+```
+
+We are going to be using these libraries to create a script
+that will use `remark` and run through the `.mdx` files
+and process them.
+
+#### 8.2.1 Adding ignore file
+
+Let's add a file called `.remarkignore` file.
+We'll use this file to specify the directories we want to ignore
+when linting the `.mdx` files.
+
+```
+# `_app.mdx` and `index.mdx` files  are essentially `.js` files that don't need linting.
+src/**/_app.mdx
+src/**/index.mdx
+
+# Parked/archived directories won't be linted
+src/**/**/_*
+
+
+# Linting rules don't need to apply to `README.md`, only for documentation
+README.md
+```
+
+#### 8.2.2 Create the script
+
+Let's create a folder called `lint` 
+and create a file called `lint.mjs` inside it.
+
+```mjs
+import fs from "fs";
+import path from "path";
+import yargs from "yargs";
+import ignore from "ignore";
+import chalk from "chalk";
+import { fileURLToPath } from "url";
+import { glob } from "glob";
+import { remark } from "remark";
+import { reporter } from "vfile-reporter";
+import { hideBin } from "yargs/helpers";
+import {read} from 'to-vfile'
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Counter to keep track of total warnings
+let totalWarnings = 0;
+
+/**
+ *  Load and parse the .remarkignore file.
+ * @param {string} path path to the ignore file.
+ * @returns {Promise<ignore>} A promise that resolves with the ignore instance.
+ */
+async function loadIgnoreFile(path) {
+  try {
+    const ignoreFileContent = fs.readFileSync(path, "utf-8");
+    const ig = ignore().add(ignoreFileContent);
+    return ig;
+  } catch (err) {
+    console.warn("No .remarkignore file found, proceeding without ignoring files.");
+    return ignore();
+  }
+}
+
+/**
+ *  Process a single file with the given preset and formatting flag.
+ * @param {string} filePath  The path to the file
+ * @param {string} preset  The preset object to use for linting with array of remark plugins
+ * @param {boolean} shouldFormat  Flag to indicate whether formatting (changing markdown files) should be applied
+ */
+async function formatSingleFile(filePath, preset, shouldFormat) {
+  try {
+    // Create a virtual file with metadata like `stem`.
+    // This is needed for rules related to files.
+    const vfile = await read(filePath);
+
+    // Process the file with the given preset
+    const file = await remark().use(preset).process(vfile);
+
+    // Check if there are any issues
+    const issues = file.messages.length;
+
+    // Print the issues
+    if (issues === 0) {
+      console.log(`${chalk.green(filePath)}: no issues found`);
+    } else {
+      totalWarnings += file.messages.length;
+      console.error(reporter(file));
+    }
+
+    // Write the file back if formatting is enabled
+    if (shouldFormat) {
+      fs.writeFileSync(filePath, file.value.toString());
+    }
+  } catch (err) {
+    console.error(`Error processing file ${filePath}:`, err);
+  }
+}
+
+// Main function to handle glob pattern and process files
+/**
+ * Process files based on the given pattern, preset, and formatting flag.
+ * @param {string} pattern The glob pattern to match files.
+ * @param {string} pattern The path to the ignore file.
+ * @param {string} preset The path to the preset object to use for linting with array of remark plugins.
+ * @param {boolean} shouldFormat  Flag to indicate whether formatting (changing markdown files) should be applied.
+ * @param {boolean} failOnError Flag to indicate whether to fail command if any error is found.
+ * @returns {Promise<void>} A promise that resolves when all files are processed.
+ */
+async function processFiles(pattern, ignoreFile, preset, shouldFormat, failOnError) {
+  try {
+    // Load the ignore file and get the list of files
+    const ig = await loadIgnoreFile(ignoreFile);
+    const files = await glob(pattern);
+
+    if (files.length === 0) {
+      console.log("No files matched the given pattern.");
+      return;
+    }
+
+    // Filter out files that are ignored
+    const filteredFiles = files.filter((file) => !ig.ignores(file));
+
+    if (filteredFiles.length === 0) {
+      console.log("All matched files are ignored.");
+      return;
+    }
+
+    // Process each file
+    for (const file of filteredFiles) {
+      await formatSingleFile(file, preset, shouldFormat);
+    }
+
+    // Print total warnings and fail command if needed
+    if (totalWarnings > 0) {
+      console.log(`${chalk.yellow("⚠")} Total ${totalWarnings} warning(s)`);
+      if (failOnError) {
+        process.exit(1);
+      }
+    }
+  } catch (err) {
+    console.error("Error during file processing:", err);
+  }
+}
+
+// Use yargs to handle command-line arguments
+const argv = yargs(hideBin(process.argv))
+  .option("pattern", {
+    alias: "p",
+    type: "string",
+    description: "Glob pattern to match files",
+    demandOption: true,
+  })
+  .option("preset", {
+    alias: "r",
+    type: "string",
+    description: "Path to the preset file",
+    demandOption: true,
+  })
+  .option("ignoreFile", {
+    alias: "i",
+    type: "string",
+    description: "Path to the ignore file",
+    demandOption: false,
+  })
+  .option("format", {
+    alias: "f",
+    type: "boolean",
+    description: "Flag to indicate whether formatting should be applied",
+    default: false,
+  })
+  .option("failOnError", {
+    alias: "e",
+    type: "boolean",
+    description: "Flag to indicate whether to fail command if any error is found",
+    default: false,
+  }).argv;
+
+// Dynamically import the preset file
+const presetPath = path.resolve(argv.preset);
+const preset = await import(presetPath);
+
+// Start processing files
+processFiles(argv.pattern, argv.ignoreFile, preset.default, argv.format, argv.failOnError);
+```
+
+Let's break down the script!
+- **`processFiles` function**:
+  - Asynchronously processes files based on a given pattern.
+  - Loads an ignore file and retrieves a list of files matching the pattern.
+  - Filters out ignored files.
+  - Processes each remaining file using a specified preset and formatting option.
+  - Logs total warnings and exits with an error code if `failOnError` is true.
+
+- **`argv` constant**:
+  - Uses `yargs` to handle command-line arguments.
+  - Defines options for `pattern`, `preset`, `ignoreFile`, `format`, and `failOnError`.
+  - Parses and stores the command-line arguments.
+
+- **`presetPath` constant**:
+  - Resolves the path to the preset file specified by the user.
+
+- **`preset` constant**:
+  - Dynamically imports the preset file based on the resolved path.
+
+- **`processFiles` invocation**:
+  - Calls the processFiles function with the parsed command-line arguments and the imported preset.
+
+With this, this script can be called as a CLI,
+which is what we'll do in the `package.json`.
+We'll provide all the parameters there!
+
+#### 8.2.3 Adding preset file
+
+Before calling our script,
+we need to create a preset of `remark` rules
+that we want to apply to our `.mdx` files.
+
+In the same `lint` folder,
+add `remark-preset.mjs`
+and paste the following code.
+
+```mjs
+import remarkMdx from "remark-mdx";
+import remarkGfm from "remark-gfm";
+import remarkLint from "remark-lint";
+import remarkValidateLinks from "remark-validate-links";
+
+// This configuration file is meant to be used in `remark CLI` to check for warnings.
+// This means that if any of these fail, the command still succeeds.
+// See https://github.com/unifiedjs/unified-engine#options for the options.
+const remarkPreset = {
+  plugins: [
+    // Support `mdx` and GFM
+    remarkMdx, // https://mdxjs.com/packages/remark-mdx/
+    remarkGfm, // https://github.com/remarkjs/remark-gfm
+
+    // Introduce remark linting rules
+    remarkLint,
+
+    // Validating URLs
+    remarkValidateLinks, // https://github.com/remarkjs/remark-validate-links
+  ],
+  // Override `remark-stringify` rules when serializing text.
+  // See https://github.com/remarkjs/remark/tree/main/packages/remark-stringify#options for options.
+  settings: {
+    emphasis: "_",
+    strong: "*",
+    bullet: "-",
+  },
+};
+
+export default remarkPreset;
+```
+
+We're using the default `remark-lint` rules,
+and adding support to `mdx` files (by using `remark-mdx`)
+and `GFM` (by using `remark-gfm`).
+Links are being validated by `remark-validate-links`.
+
+#### 8.2.4 Adding to `package.json`
+
+Let's call the script in our `package.json`
+so we can call it in CI or locally.
+
+```json
+  "scripts": {
+    "lint:check-markdown": "node './lint/lint.mjs' --pattern 'src/pages/**/*.mdx' --ignoreFile './.remarkignore' --preset  './lint/remark-preset.mjs' --failOnError",
+    "lint:fix-markdown": "node './lint/lint.mjs' --pattern 'src/pages/**/*.mdx' --ignoreFile './.remarkignore' --preset  './lint/remark-preset.mjs' --format"
+  },
+```
+
+As you can see, we are adding the `pattern`, `ignoreFile`
+and `preset` arguments when calling the script.
+Now we are able to run these,
+similarly to what we've done in [8.1 Linting in `Nextra v2`](#81-linting-in-nextra-v2)!
 
 # Star the repo!
 

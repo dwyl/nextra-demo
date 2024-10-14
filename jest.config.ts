@@ -25,7 +25,6 @@ const config: Config = {
     // Testing auth with `next-auth` complains (consider switching to Vitest)
     // Doesn't seem to have a proper solution. See https://github.com/nextauthjs/next-auth/issues/4198.
     "src/auth.ts",
-    "src/generatePrivateRoutes.ts",
 
     // Middleware can't be properly mocked to test.
     "src/middleware.ts",

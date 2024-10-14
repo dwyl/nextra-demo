@@ -23,13 +23,9 @@ jobs:
     - name: Install dependencies
       run: pnpm install --no-frozen-lockfile
 
-    # Run `markdownlint-cli2` to lint markdown files
+    # Run `markdownlint-cli2` to lint markdown files (checks dead links with `remark-validate-links`)
     - name: Running `markdownlint-cli2`
       run: pnpm run lint:check-markdown
-
-    # Run script to check for dead links
-    - name: Checking for dead links
-      run: pnpm run lint:check-external-links
 
     # Run build
     - name: Build Next.js app

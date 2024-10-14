@@ -109,6 +109,12 @@ or just want to discuss this further,
 
 Ready? Let's go! 🚀
 
+> [!IMPORTANT]
+>
+> The project at root-level pertains to the `v3` version of `Nextra`.
+> To find the `v2` version,
+> check th [`_v2`](./_v2) directory.
+
 ## Run the _Finished_ Project
 
 ### 1. Clone the Project
@@ -150,7 +156,7 @@ TEST_PASSWORD=<ANY_PASSWORD_FOR_TESTS_TO_RUN>
 
 > [!NOTE]
 >
-> Check [tutorial.md](./tutorial.md#2-add-authentication-)
+> Check [docs/tutorial.md](./docs/tutorial.md#2-add-authentication-)
 > to learn where to get these environment variables.
 
 
@@ -192,7 +198,7 @@ npm run e2e:test
 
 Ready to _build_ it yourself?!
 See:
-[tutorial.md](./tutorial.md)
+[docs/tutorial.md](./docs/tutorial.md)
 
 
 # _Please_ star the repo! ⭐️

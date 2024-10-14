@@ -2,22 +2,17 @@ import fs from "fs";
 import path from "path";
 import yargs from "yargs";
 import ignore from "ignore";
-import chalk from "chalk";
-import { fileURLToPath } from "url";
 import { glob } from "glob";
 import { remark } from "remark";
 import { reporter } from "vfile-reporter";
 import { hideBin } from "yargs/helpers";
 import {read} from 'to-vfile'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Counter to keep track of total warnings
 let totalWarnings = 0;
 
 /**
- *  Load and parse the .remarkignore file.
+ * Load and parse the .remarkignore file.
  * @param {string} path path to the ignore file.
  * @returns {Promise<ignore>} A promise that resolves with the ignore instance.
  */
@@ -52,7 +47,7 @@ async function formatSingleFile(filePath, preset, shouldFormat) {
 
     // Print the issues
     if (issues === 0) {
-      console.log(`${chalk.green(filePath)}: no issues found`);
+      console.log(`${filePath}: no issues found`);
     } else {
       totalWarnings += file.messages.length;
       console.error(reporter(file));
@@ -77,7 +72,7 @@ async function formatSingleFile(filePath, preset, shouldFormat) {
  * @param {boolean} failOnError Flag to indicate whether to fail command if any error is found.
  * @returns {Promise<void>} A promise that resolves when all files are processed.
  */
-async function processFiles(pattern, ignoreFile, preset, shouldFormat, failOnError) {
+export async function processFiles(pattern, ignoreFile, preset, shouldFormat, failOnError) {
   try {
     // Load the ignore file and get the list of files
     const ig = await loadIgnoreFile(ignoreFile);
@@ -103,7 +98,7 @@ async function processFiles(pattern, ignoreFile, preset, shouldFormat, failOnErr
 
     // Print total warnings and fail command if needed
     if (totalWarnings > 0) {
-      console.log(`${chalk.yellow("⚠")} Total ${totalWarnings} warning(s)`);
+      console.log(`⚠️ Total ${totalWarnings} warning(s)`);
       if (failOnError) {
         process.exit(1);
       }
@@ -148,7 +143,9 @@ const argv = yargs(hideBin(process.argv))
 
 // Dynamically import the preset file
 const presetPath = path.resolve(argv.preset);
-const preset = await import(presetPath);
+import(presetPath)
+.then((preset) => 
+  // Start processing files
+  processFiles(argv.pattern, argv.ignoreFile, preset.default, argv.format, argv.failOnError)
+);
 
-// Start processing files
-processFiles(argv.pattern, argv.ignoreFile, preset.default, argv.format, argv.failOnError);

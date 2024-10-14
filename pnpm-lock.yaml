@@ -21,10 +21,10 @@ importers:
         specifier: ^3.12.1
         version: 3.12.2(next@14.2.15(@babel/core@7.25.8)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       nextra:
-        specifier: 3.0.8
+        specifier: ^3.0.8
         version: 3.0.8(@types/react@18.3.11)(next@14.2.15(@babel/core@7.25.8)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.4.5)
       nextra-theme-docs:
-        specifier: 3.0.8
+        specifier: ^3.0.8
         version: 3.0.8(next@14.2.15(@babel/core@7.25.8)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(nextra@3.0.8(@types/react@18.3.11)(next@14.2.15(@babel/core@7.25.8)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.4.5))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.1
@@ -54,9 +54,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.19
         version: 10.4.20(postcss@8.4.47)
-      chalk:
-        specifier: ^5.3.0
-        version: 5.3.0
+      babel-jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@babel/core@7.25.8)
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5

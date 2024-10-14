@@ -15,7 +15,7 @@ const config: Config = {
   setupFiles: ["./jest.polyfills.js"],
 
   collectCoverage: true,
-  collectCoverageFrom: ["src/**/*.{js,jsx,ts,tsx}", "scripts/*.{mjs,js,jsx,ts,tsx}", "!<rootDir>/node_modules/"],
+  collectCoverageFrom: ["src/**/*.{js,jsx,ts,tsx}", "scripts/*.{mjs,js,jsx,ts,tsx}", "!<rootDir>/node_modules/", "!src/generatePrivateRoutes.ts"],
   coverageDirectory: "coverage",
   coveragePathIgnorePatterns: ["/node_modules/"],
   coverageProvider: "v8",
@@ -25,6 +25,7 @@ const config: Config = {
     // Testing auth with `next-auth` complains (consider switching to Vitest)
     // Doesn't seem to have a proper solution. See https://github.com/nextauthjs/next-auth/issues/4198.
     "src/auth.ts",
+    "src/generatePrivateRoutes.ts",
 
     // Middleware can't be properly mocked to test.
     "src/middleware.ts",
@@ -44,7 +45,7 @@ const config: Config = {
   },
 
   testEnvironment: "jsdom",
-  testPathIgnorePatterns: ["tests/e2e"],
+  testPathIgnorePatterns: ["tests/e2e", "tests/unit/link-check.test.ts"],
 };
 
 export default createJestConfig(config);

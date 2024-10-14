@@ -1,3 +1,4 @@
+import { useSession } from "next-auth/react"
 import {
   MenuItem as _MenuItem,
   Menu,
@@ -15,9 +16,11 @@ import type { ReactElement, ReactNode } from 'react'
 import { useMenu, useThemeConfig } from '../contexts'
 import { renderComponent } from '../utils'
 import { Anchor } from './anchor'
+import { ExtendedPageItem, ExtendedMenuItem } from '../types';
+import { ExtendedUser } from '../../../src/types';
 
 export type NavBarProps = {
-  items: (PageItem | MenuItem)[]
+  items: (ExtendedPageItem | ExtendedMenuItem)[]
 }
 
 const classes = {
@@ -107,6 +110,9 @@ export function Navbar({ items }: NavBarProps): ReactElement {
   const activeRoute = useFSRoute()
   const { menu, setMenu } = useMenu()
 
+  const {data, status: session_status} = useSession()     // add this
+  const user = data?.user as ExtendedUser                 // add this
+
   return (
     <div className="nextra-nav-container _sticky _top-0 _z-20 _w-full _bg-transparent print:_hidden">
       <div className="nextra-nav-container-blur" />
@@ -129,6 +135,29 @@ export function Navbar({ items }: NavBarProps): ReactElement {
         )}
         <div className="_flex _gap-4 _overflow-x-auto nextra-scrollbar _py-1.5">
           {items.map(pageOrMenu => {
+
+          // Wait until the session is fetched (be it empty or authenticated)
+          if(session_status === "loading") {
+            return null
+          }
+
+          // If it's a public user but the link is marked as private, hide it
+          if(session_status === "unauthenticated") {
+            if(pageOrMenu.private) return null
+          }
+
+          // If the user is authenticated
+          // and the page menu is protected or the role of the user is not present in the array, we block it
+          if(session_status === "authenticated" && user) {
+            if (pageOrMenu.private?.private) {
+              const neededRoles = pageOrMenu.private.roles || []
+              const userRole = user.role
+              if(!userRole || !neededRoles.includes(userRole)) {
+                return null
+              }
+            }
+          }
+
             if (pageOrMenu.display === 'hidden') return null
 
             if (pageOrMenu.type === 'menu') {

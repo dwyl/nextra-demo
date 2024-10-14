@@ -21,6 +21,9 @@ import { renderComponent } from '../utils'
 import { Anchor } from './anchor'
 import { Collapse } from './collapse'
 import { LocaleSwitch } from './locale-switch'
+import { ExtendedItem, ExtendedPageItem } from '../types'
+import { useSession } from 'next-auth/react'
+import { shouldLinkBeRenderedAccordingToUserRole } from '../utils/render'
 
 const TreeState: Record<string, boolean> = Object.create(null)
 
@@ -283,7 +286,7 @@ function File({
 }
 
 interface MenuProps {
-  directories: PageItem[] | Item[]
+  directories: ExtendedPageItem[] | ExtendedItem[]
   anchors: Heading[]
   base?: string
   className?: string
@@ -309,10 +312,14 @@ function Menu({
     [onFocus]
   )
 
+  const session = useSession()
+
   return (
     <ul className={cn(classes.list, className)}>
       {directories.map(item => {
-        if (onlyCurrentDocs && !item.isUnderCurrentDocsTree) return
+
+        if(!shouldLinkBeRenderedAccordingToUserRole(session, item))
+          return null
 
         const ComponentToUse =
           item.type === 'menu' ||
@@ -334,8 +341,8 @@ function Menu({
 }
 
 interface SideBarProps {
-  docsDirectories: PageItem[]
-  fullDirectories: Item[]
+  docsDirectories: ExtendedPageItem[]
+  fullDirectories: ExtendedItem[]
   asPopover?: boolean
   toc: Heading[]
   includePlaceholder: boolean

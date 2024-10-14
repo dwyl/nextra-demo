@@ -22,6 +22,7 @@
     - [4.3 Implementing private route retrieval function](#43-implementing-private-route-retrieval-function)
       - [4.3.1 Defining `_meta.json` files with `private` properties](#431-defining-_metajson-files-with-private-properties)
       - [4.3.2 Implementing the function](#432-implementing-the-function)
+        - [4.3.2.1 `Nextra` `v3` version](#4321-nextra-v3-version)
     - [4.4 Running the script before building](#44-running-the-script-before-building)
   - [5. Moving source files to `src` folder](#5-moving-source-files-to-src-folder)
   - [6. Adding custom theme](#6-adding-custom-theme)
@@ -41,6 +42,14 @@
     - [8.3 Linting and checking for broken internal relative links](#83-linting-and-checking-for-broken-internal-relative-links)
     - [8.4 Adding to CI](#84-adding-to-ci)
 - [Star the repo!](#star-the-repo)
+
+
+> [!IMPORTANT]
+>
+> While this tutorial was initially written for `v2` of `Nextra`,
+> most of the content is still relevant for `v3`.
+> We make sure to highlight the differences
+> throughout the tutorial.
 
 > [!TIP]
 >
@@ -1436,6 +1445,118 @@ But the gist of it is:
 
 And that's it!
 
+##### 4.3.2.1 `Nextra` `v3` version
+
+[For Nextra `v3`](https://github.com/shuding/nextra/tree/v3),
+we need to make a few changes.
+Because `_meta.json` files now become **`_meta.ts`** files,
+we're going to change the `getPrivateRoutes` function.
+
+```ts
+export function getPrivateRoutes(pagesDir: string): PrivateRoutes {
+  let privateRoutes: PrivateRoutes = {};
+
+  // Find all _meta.ts files recursively
+  const metaFiles = globSync(path.join(pagesDir, "**/_meta.ts"));
+
+  // Variable to keep track if parent is private on nested routes and its role
+  const rootPrivateSettings: { 
+    [key: string]: { private: boolean; roles: string[] } 
+  } = {};
+
+  // Initialize ts-morph Project for reading the _meta.ts files
+  const project = new Project();
+
+  // Iterate over the found meta files
+  for (const file of metaFiles) {
+    // Get the path of the file and parse it using ts-morph
+    const dir = path.dirname(file);
+    const sourceFile = project.addSourceFileAtPath(file);
+
+    // Get the default export assignment from the _meta.ts file
+    const defaultExport = sourceFile.getExportAssignments();
+    
+    if (!defaultExport) {
+      console.error(`No export assignment found in ${file}`);
+      continue;
+    }
+
+    const metaObject = defaultExport[0].getExpression();
+
+    // If the expression is an object literal, we can process it
+    if (metaObject?.getKind() === SyntaxKind.ObjectLiteralExpression) {
+      const objectLiteral = metaObject as ObjectLiteralExpression;
+      
+      // Iterate over the properties of the object literal
+      objectLiteral.getProperties().forEach(prop => {
+        if (prop.getKind() === SyntaxKind.PropertyAssignment) {
+          const propertyAssignment = prop as PropertyAssignment;
+          const key = propertyAssignment.getName();
+          const initializer = propertyAssignment.getInitializer();
+
+          if (!key || !initializer) {
+            return;
+          }
+
+          const route = path.join(dir, key).replace(pagesDir, "").replace(/\\/g, "/");
+
+          // Check if the current meta has a "private" property
+          if (initializer.getKind() === SyntaxKind.ObjectLiteralExpression) {
+            const metaInitializer = initializer as ObjectLiteralExpression;
+
+            // Check for "private" property inside the object
+            const privateProp = metaInitializer.getProperty("private") as PropertyAssignment;
+            if (privateProp) {
+              const privateValue = privateProp.getInitializer();
+
+              if (privateValue?.getKind() === SyntaxKind.TrueKeyword) {
+                privateRoutes[route] = [];
+                rootPrivateSettings[dir] = { private: true, roles: [] };
+              }
+              // If the "private" property is an object with possible roles
+              else if (privateValue?.getKind() === SyntaxKind.ObjectLiteralExpression) {
+                const privateObject = privateValue as ObjectLiteralExpression;
+                const rolesProp = privateObject.getProperty("roles") as PropertyAssignment;
+                const roles = rolesProp ? rolesProp.getInitializer()?.getText().replace(/[\[\]\s"]/g, "").split(",") as string[] : [] as string[];
+                privateRoutes[route] = roles;
+                rootPrivateSettings[dir] = { private: true, roles: roles };
+              }
+            }
+          } else {
+            // Check if the parent folder is private and inherit roles
+            const parentDir = path.resolve(dir, "..");
+            if (rootPrivateSettings[parentDir] && rootPrivateSettings[parentDir].private) {
+              const parentRoles = rootPrivateSettings[parentDir].roles;
+              privateRoutes[route] = parentRoles;
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // Second pass to clean-up possible unwanted/invalid routes
+  for (const route of Object.keys(privateRoutes)) {
+    const fullPath = path.join(pagesDir, route);
+    const lastSegment = route.split("/").pop();
+
+    // Remove separators or any route that doesn't match existing file/directory
+    if (lastSegment === "---") {
+      delete privateRoutes[route];
+      continue;
+    }
+
+    // Check for the existence of .mdx file
+    const mdxPath = `${fullPath}.mdx`;
+    if (!fs.existsSync(fullPath) && !fs.existsSync(mdxPath)) {
+      delete privateRoutes[route];
+    }
+  }
+
+  return privateRoutes;
+}
+```
+
 
 ### 4.4 Running the script before building
 
@@ -2368,9 +2489,64 @@ function Menu({
 }
 ```
 
+> [!NOTE]
+>
+> In `Nextra v3`, you will only need to add the following code to the `Menu` function:
+>
+> ```ts
+> if(!shouldLinkBeRenderedAccordingToUserRole(session, item))
+>           return null
+> ```
+
 We are calling the `useSession()` hoook
 and using the `shouldLinkBeRenderedAccordingToUserRole()` function to render the links
 according to the person role!
+
+This function is a function that we create in `/theme/src/utils/render.tsx`.
+Change it so it has the following piece of code following:
+
+```tsx
+import { ExtendedUser } from "../../../src/types";
+import { ExtendedItem, ExtendedPageItem, ExtendedMenuItem } from "../types";
+import { SessionContextValue } from "next-auth/react";
+
+/**
+ * This functions tells if the user can see a given `navbar` or `sidebar` link item
+ * according to its role.
+ * @param session session from the user.
+ * @param item item (can either be a page item, menu item or normal item)
+ * @returns true if the link can be shown to the user. False if the user doesn't have authorization to see the link.
+ */
+export function shouldLinkBeRenderedAccordingToUserRole(
+  session: SessionContextValue<boolean>,
+  item: ExtendedItem | ExtendedPageItem | ExtendedMenuItem
+) {
+  const { data, status: session_status } = session;
+  const user = data?.user as ExtendedUser;
+
+  // Wait until the session is fetched (be it empty or authenticated)
+  if (session_status === "loading") return false;
+
+  // If it's a public user but the link is marked as private, hide it
+  if (session_status === "unauthenticated") {
+    if (item.private) return false;
+  }
+
+  // If the user is authenticated
+  // and the page menu is protected or the role of the user is not present in the array, we block it
+  if (session_status === "authenticated" && user) {
+    if (item.private?.private) {
+      const neededRoles = item.private.roles || [];
+      const userRole = user.role;
+      if (!userRole || !neededRoles.includes(userRole)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+```
 
 And that's it!
 Congratulations,

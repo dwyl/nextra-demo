@@ -1,4 +1,7 @@
 export default {
+  index: {
+    "display": "hidden"
+  },
   about: "about",
   "---": {
     type: "separator"
